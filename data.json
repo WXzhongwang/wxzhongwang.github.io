@@ -726,5 +726,20 @@
   "reviewCount": 0,
   "lastReview": "",
   "nextReview": "2026-08-28"
+ },
+ {
+  "id": "presto-trino-overview",
+  "name": "Presto/Trino 原理与使用",
+  "stack": "其他",
+  "types": [
+   "原理",
+   "使用方法",
+   "面试题"
+  ],
+  "content": "## 核心原理\n\nPresto（现名 Trino）是**分布式 MPP 交互式查询引擎**，主打「一个 SQL 引擎联邦查询多种数据源」。\n\n### 架构三角色\n- **Coordinator**：解析 SQL、生成执行计划、调度任务给 Worker，不承载数据计算\n- **Worker**：真正执行算子（Scan/Join/Agg），水平扩展\n- **Connector 体系**：接 Hive/HDFS、MySQL、Kafka、Iceberg 等数据源的插件抽象，元数据与数据读写全部由 Connector 提供\n\n### 执行模型\n- SQL → AST → 逻辑计划 → 优化规则（谓词下推、列裁剪、Join 重排）→ **Stage/Exchange 物理计划**\n- Stage 之间通过 Exchange（HTTP/内存缓冲）传数据，Stage 内部按 Split 并行\n- 与 Hive 最大区别：**全内存 pipeline 执行，无 Map 阶段落盘**，所以快；代价是超大 Join 可能 OOM（需 spill to disk 配合）\n\n## 使用方法\n\n```sql\n-- 跨源联邦查询：MySQL 订单表 JOIN Hive 用户表\nSELECT u.name, count(o.id) AS cnt\nFROM hive.ods.orders o\nJOIN mysql.biz.users u ON o.user_id = u.id\nWHERE o.dt = '2026-08-28'\nGROUP BY u.name ORDER BY cnt DESC;\n\n-- 常用会话参数\nSET SESSION query_max_execution_time = '10min';\nSET SESSION join_distribution_type = 'BROADCAST';\n```\n\nJDBC 连接：`jdbc:trino://coordinator:8080/hive`，驱动类 `io.trino.jdbc.TrinoDriver`。\n\n## 面试高频题\n\n**Q1: Trino 和 Spark SQL 怎么选？**\nA: Trino 是常驻 MPP 服务，交互式秒级查询、并发强，适合 BI 即席查询/联邦查询；Spark 是批处理引擎，适合 ETL 大任务、容错和 shuffle 能力更强。典型架构：Spark 做离线加工入仓，Trino 做上层查询。\n\n**Q2: 为什么 Trino 快？**\nA: 全内存 pipeline 执行无落盘、动态代码生成（字节码）、向量化列式读取、Connector 支持谓词下推与列裁剪（只读需要的分区和列）。\n\n**Q3: 大表 Join 内存不够怎么办？**\nA: 开启 spill（`spill-enabled=true`）溢写磁盘；Broadcast 改 Repartitioned Join；调 `query.max-memory-per-node`；或把超大 Join 交回 Spark。",
+  "level": "待学习",
+  "reviewCount": 0,
+  "lastReview": "",
+  "nextReview": "2026-08-28"
  }
 ]
