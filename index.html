@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>大数据知识巩固台</title>
+<title>zhongwang 的大数据宝典</title>
 <!-- 静态站点版：数据来自同目录 data.json（GitHub 仓库维护），复习进度保存在浏览器本地 -->
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -122,6 +122,40 @@
   .iq-item.open .iq-body { display: block; }
   .iq-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
 
+  /* ===== 结构图 ===== */
+  .detail-diagram { background: #f8fafc; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin: 2px 0 12px; }
+  .detail-diagram .dg-cap { font-size: 11px; color: var(--text3); text-align: center; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; gap: 4px; }
+  .detail-diagram svg { width: 100%; height: auto; display: block; }
+  .k-diabadge { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: #0e7490; background: #ecfeff; padding: 2px 8px; border-radius: 6px; }
+
+  /* ===== 面试专题：子视图 ===== */
+  .subtabs { display: flex; gap: 6px; margin: 14px 0 4px; flex-wrap: wrap; align-items: center; }
+  .subtab { border: 1px solid var(--line); background: var(--card); color: var(--text2); border-radius: 999px; padding: 8px 16px; font-size: 13px; font-weight: 600; min-height: 38px; }
+  .subtab.on { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .bank-tool { display: flex; gap: 8px; margin: 10px 0 12px; flex-wrap: wrap; align-items: center; }
+  .bank-meta { font-size: 12px; color: var(--text3); }
+  .btn-random { display: inline-flex; align-items: center; gap: 6px; background: var(--violet); color: #fff; font-size: 13px; font-weight: 700; padding: 9px 16px; border-radius: 10px; min-height: 40px; }
+  .btn-random svg { width: 14px; height: 14px; }
+  .cat-item { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 12px; }
+  .cat-head { display: flex; align-items: center; gap: 10px; padding: 13px 15px; cursor: pointer; }
+  .cat-head h3 { font-size: 15px; font-weight: 700; flex: 1; }
+  .cat-count { font-size: 12px; color: var(--text2); background: var(--bg); border-radius: 999px; padding: 3px 10px; flex: none; }
+  .cat-body { display: none; border-top: 1px dashed var(--line); padding: 6px 15px 14px; }
+  .cat-item.open .cat-body { display: block; }
+  .cat-item.open .iq-chev { transform: rotate(180deg); }
+  .bq-item { border-bottom: 1px dashed var(--line); }
+  .bq-item:last-child { border-bottom: none; }
+  .bq-head { display: flex; align-items: flex-start; gap: 10px; padding: 12px 2px; cursor: pointer; }
+  .bq-idx { flex: none; width: 24px; height: 24px; border-radius: 8px; background: var(--primary-soft); color: var(--primary); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+  .bq-q { flex: 1; font-size: 14px; font-weight: 600; line-height: 1.55; }
+  .bq-tags { display: flex; gap: 5px; margin-top: 6px; flex-wrap: wrap; }
+  .bq-tag { font-size: 10px; padding: 2px 8px; border-radius: 999px; background: var(--bg); color: var(--text2); }
+  .bq-tag.hot { background: var(--red-soft); color: var(--red); font-weight: 700; }
+  .bq-reveal { font-size: 12px; color: var(--primary); font-weight: 600; flex: none; margin-top: 4px; }
+  .bq-ans { display: none; background: var(--primary-soft); border-radius: 10px; padding: 12px 14px; margin: 0 0 12px 34px; }
+  .bq-item.open .bq-ans { display: block; }
+  .bq-item.open .bq-reveal { color: var(--text3); }
+
   /* ===== 统计 ===== */
   .stats-wrap { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
   .stat-card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px; }
@@ -207,21 +241,130 @@
   .toast { position: fixed; left: 50%; bottom: 92px; transform: translateX(-50%) translateY(10px); background: rgba(15,23,42,.9); color: #fff; font-size: 13px; padding: 10px 18px; border-radius: 999px; z-index: 99; opacity: 0; transition: all .25s; pointer-events: none; max-width: 86vw; text-align: center; }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+  /* ===== 今日打卡可点击 ===== */
+  .t-item.clickable { cursor: pointer; transition: background .12s; border-radius: 8px; }
+  .t-item.clickable:hover { background: var(--primary-soft); }
+  .t-item.clickable:active { background: var(--primary-soft); transform: scale(.997); }
+
   /* ===== 响应式 ===== */
   @media (max-width: 767px) {
-    body { padding-bottom: 88px; }
-    .chart-grid { grid-template-columns: 1fr; }
-    .tabs { display: none; }
+    body { padding-bottom: 84px; font-size: 14px; }
+    .wrap { padding: 0 10px; }
+    /* Header */
+    .hd-inner { padding: 13px 10px; gap: 10px; }
+    .hd-logo { width: 36px; height: 36px; border-radius: 10px; }
+    .hd-logo svg { width: 20px; height: 20px; }
+    .hd-title { font-size: 16px; }
     .hd-sub { display: none; }
+    .hd-right { gap: 6px; }
+    .hd-btn { padding: 8px 10px; min-height: 40px; }
     .hd-btn span.t { display: none; }
-    .hd-btn { padding: 8px; }
-    .k-grid { grid-template-columns: 1fr; }
-    .modal { max-width: 100%; }
+    .hd-btn svg { width: 16px; height: 16px; }
+    .sync-pill { padding: 4px 10px; font-size: 11px; }
+    /* 备份提示 */
+    .backup-tip { margin-top: 10px; padding: 8px 10px; font-size: 12px; gap: 6px; }
+    .backup-tip svg { width: 14px; height: 14px; }
+    /* 今日复习 */
+    .today-card { margin-top: 10px; }
+    .today-head { padding: 12px; gap: 8px; flex-wrap: wrap; }
+    .today-head h2 { font-size: 15px; }
+    .today-stats { gap: 4px; }
+    .stat-chip { font-size: 11px; padding: 2px 8px; }
+    .today-body { padding: 6px 12px 12px; }
+    .t-item { padding: 10px 2px; gap: 8px; }
+    .t-item.clickable:hover { background: transparent; }
+    .t-item.clickable:active { background: var(--primary-soft); }
+    .t-name { font-size: 13.5px; }
+    .t-meta { font-size: 11.5px; }
+    .btn-done { padding: 7px 12px; font-size: 12px; min-height: 38px; }
+    .btn-done svg { width: 13px; height: 13px; }
+    /* 筛选 */
+    .filter-bar { gap: 6px; margin: 10px 0; }
+    .search-box { min-width: 0; flex: 1 1 100%; }
+    .search-box input { padding: 10px 10px 10px 32px; font-size: 15px; min-height: 42px; }
+    .search-box svg { left: 10px; width: 14px; height: 14px; }
+    .chip { padding: 6px 11px; font-size: 12px; min-height: 34px; }
+    /* 知识卡片网格 */
+    .k-grid { grid-template-columns: 1fr; gap: 10px; }
+    .k-card { padding: 12px 12px 10px; }
+    .k-name { font-size: 14px; -webkit-line-clamp: 3; }
+    .k-top { gap: 6px; flex-wrap: wrap; }
+    .k-stack, .k-ov, .k-type { font-size: 10.5px; padding: 2px 8px; }
+    .k-foot { font-size: 11px; margin-top: 8px; padding-top: 8px; gap: 5px; }
+    .k-level { font-size: 11px; padding: 2px 8px; }
+    /* 面试专题 */
+    .subtabs { gap: 6px; margin: 12px 0 4px; }
+    .subtab { padding: 7px 13px; font-size: 12.5px; min-height: 36px; }
+    .bank-tool { gap: 6px; margin: 8px 0 10px; }
+    .btn-random { padding: 8px 13px; font-size: 12.5px; min-height: 38px; }
+    .cat-head { padding: 12px 13px; }
+    .cat-head h3 { font-size: 14px; }
+    .cat-count { font-size: 11px; padding: 2px 8px; }
+    .cat-body { padding: 6px 13px 12px; }
+    .bq-head { padding: 11px 2px; gap: 8px; }
+    .bq-idx { width: 22px; height: 22px; font-size: 10.5px; }
+    .bq-q { font-size: 13.5px; }
+    .bq-tag { font-size: 10px; padding: 2px 7px; }
+    .bq-reveal { font-size: 11.5px; }
+    .bq-ans { padding: 10px 11px; margin: 0 0 10px 30px; }
+    .iq-head { padding: 12px 13px; gap: 8px; }
+    .iq-q { font-size: 13.5px; }
+    .iq-stack { font-size: 10.5px; padding: 2px 7px; }
+    .iq-body { padding: 11px 13px 13px; }
+    /* 统计 */
+    .stats-wrap { grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 10px; }
+    .chart-grid { grid-template-columns: 1fr; gap: 10px; }
+    .stat-card { padding: 12px; }
+    .stat-num { font-size: 22px; }
+    .stat-num small { font-size: 12px; }
+    .stat-label { font-size: 11px; }
+    .chart-card { padding: 13px; }
+    .chart-card h3 { font-size: 13px; margin-bottom: 10px; }
+    .chart-card h3 svg { width: 14px; height: 14px; }
+    .ring-wrap { gap: 12px; justify-content: center; }
+    .ring-wrap svg { width: 130px; height: 130px; }
+    .legend { min-width: 0; flex-basis: 100%; flex-direction: row; flex-wrap: wrap; gap: 6px 14px; }
+    .legend-item { font-size: 11px; }
+    .bar-label { width: 60px; font-size: 11px; }
+    .bar-val { width: 28px; font-size: 11px; }
+    .bar-track { height: 16px; }
+    /* 结构图 */
+    .detail-diagram { padding: 8px 10px; margin: 2px 0 10px; }
+    .detail-diagram .dg-cap { font-size: 10.5px; margin-bottom: 4px; }
+    .detail-diagram svg { max-height: 260px; }
+    /* 详情 */
+    .detail-markdown { font-size: 13.5px; line-height: 1.7; }
+    .detail-markdown h3 { font-size: 14px; }
+    .detail-markdown h4 { font-size: 13.5px; }
+    .detail-markdown pre { font-size: 11.5px; padding: 10px 12px; }
+    .detail-actions { gap: 8px; }
+    .detail-actions .btn-done { width: 100%; min-height: 42px; font-size: 13px; }
+    /* 弹窗：移动端全屏从底部滑入 */
+    .mask { align-items: flex-end; padding: 0; }
+    .mask.center { align-items: flex-end; padding: 0; }
+    .modal { max-width: 100%; border-radius: 14px 14px 0 0; max-height: 92vh; animation: slideUp .22s ease; }
+    .mask.center .modal { border-radius: 14px 14px 0 0; max-height: 92vh; animation: slideUp .22s ease; }
+    .modal-head { padding: 14px 14px 10px; }
+    .modal-head h3 { font-size: 15px; }
+    .modal-body { padding: 0 14px 18px; }
+    /* Toast */
+    .toast { bottom: 96px; font-size: 12px; padding: 8px 14px; max-width: 90vw; }
+    /* 隐藏 PC Tab（用底部导航替代） */
+    .tabs { display: none; }
   }
   @media (min-width: 768px) {
     .bottom-nav { display: none; }
     .mask { align-items: center; padding: 16px; }
     .modal { border-radius: 18px; max-height: 84vh; }
+  }
+  /* 超窄屏（≤380px）进一步压缩 */
+  @media (max-width: 380px) {
+    .hd-title { font-size: 14.5px; }
+    .hd-logo { width: 32px; height: 32px; }
+    .stat-chip { font-size: 10.5px; padding: 2px 6px; }
+    .k-name { font-size: 13.5px; }
+    .bar-label { width: 52px; }
+    .ring-wrap svg { width: 116px; height: 116px; }
   }
 </style>
 </head>
@@ -235,7 +378,7 @@
       </svg>
     </div>
     <div>
-      <div class="hd-title">大数据知识巩固台</div>
+      <div class="hd-title">zhongwang 的大数据宝典</div>
       <div class="hd-sub">技术栈 · 原理 · 面试题 · 架构方案 · 核心代码</div>
     </div>
     <div class="hd-right">
@@ -244,11 +387,6 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
         <span class="t">导出备份</span>
       </button>
-      <button class="hd-btn" onclick="document.getElementById('importFile').click()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-        <span class="t">导入恢复</span>
-      </button>
-      <input type="file" id="importFile" accept=".json,application/json" class="hidden" onchange="importJSON(this)">
     </div>
   </div>
 </header>
@@ -283,7 +421,7 @@
     </button>
     <button class="tab" data-tab="interview" onclick="switchTab('interview')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-      面试题专项<span class="tab-count" id="cntIq">0</span>
+      面试专题<span class="tab-count" id="cntIq">0</span>
     </button>
     <button class="tab" data-tab="stats" onclick="switchTab('stats')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
@@ -298,10 +436,6 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
         <input type="text" id="searchInput" placeholder="搜索知识点（如：Kafka、Shuffle、Checkpoint）" oninput="onSearch()">
       </div>
-      <button class="btn-ghost" onclick="openClearModal()" style="min-height:44px">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-        清空本地进度
-      </button>
     </div>
     <div class="filter-bar">
       <button class="chip on" data-stack="" onclick="setStackFilter('')">全部</button>
@@ -315,10 +449,26 @@
     <div id="libraryEmpty"></div>
   </section>
 
-  <!-- 面试题专项 -->
+  <!-- 面试专题 -->
   <section id="tab-interview" class="hidden">
-    <div class="iq-list" id="iqList"></div>
-    <div id="iqEmpty"></div>
+    <div class="subtabs">
+      <button class="subtab on" id="subBank" onclick="switchIvView('bank')">📚 专项题库</button>
+      <button class="subtab" id="subMine" onclick="switchIvView('mine')">🗂 我的面试题卡片</button>
+    </div>
+    <div id="ivBank">
+      <div class="bank-tool">
+        <button class="btn-random" onclick="randomQuestion()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+          随机一题（模拟面试）
+        </button>
+        <span class="bank-meta" id="bankMeta">题库加载中…</span>
+      </div>
+      <div id="bankList"></div>
+    </div>
+    <div id="ivMine" class="hidden">
+      <div class="iq-list" id="iqList"></div>
+      <div id="iqEmpty"></div>
+    </div>
   </section>
 
   <!-- 学习统计 -->
@@ -357,7 +507,7 @@
   </button>
   <button class="bn-item" data-tab="interview" onclick="switchTab('interview')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-    面试题
+    面试专题
   </button>
   <button class="bn-item" data-tab="stats" onclick="switchTab('stats')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
@@ -365,51 +515,8 @@
   </button>
 </nav>
 
-<button class="fab" onclick="openForm()" aria-label="新增知识卡片">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-</button>
-
-<!-- 表单弹窗 -->
-<div class="mask hidden" id="formMask" onclick="if(event.target===this)closeForm()">
-  <div class="modal">
-    <div class="modal-head">
-      <h3 id="formTitle">新增知识卡片</h3>
-      <button class="m-close" onclick="closeForm()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-      </button>
-    </div>
-    <div class="modal-body">
-      <div class="form-row">
-        <label>知识点名称 <i>*</i></label>
-        <input type="text" name="名称" placeholder="如：Flink Checkpoint 原理与调优">
-      </div>
-      <div class="form-row">
-        <label>技术栈 <i>*</i></label>
-        <select name="技术栈"><option value="">请选择技术栈</option></select>
-      </div>
-      <div class="form-row">
-        <label>知识类型（可多选）<i>*</i></label>
-        <div class="chk-group" id="typeGroup"></div>
-      </div>
-      <div class="form-row">
-        <label>掌握度</label>
-        <select name="掌握度"><option value="">请选择</option></select>
-      </div>
-      <div class="form-row">
-        <label>下次复习日期</label>
-        <input type="date" name="下次复习">
-        <div class="form-hint">留空则默认按艾宾浩斯间隔自动安排（1/3/7/15/30 天）。</div>
-      </div>
-      <div class="form-row">
-        <label>详细内容</label>
-        <textarea name="详细内容" placeholder="支持 Markdown 片段：&#10;### 原理&#10;- 关键点列表&#10;- 使用方法&#10;&#10;### 核心代码&#10;```sql&#10;SELECT ...&#10;```&#10;&#10;### 面试题&#10;Q：...&#10;A：..."></textarea>
-        <div class="form-hint">本地新增的卡片仅保存在浏览器；如需沉淀进知识库，请提交到 GitHub 仓库 data.json。</div>
-      </div>
-      <button class="btn-primary" id="formSubmitBtn" onclick="submitForm()">保存知识卡片</button>
-    </div>
-  </div>
-</div>
-
+<!-- FAB 新增按钮已移除：知识点不支持本地编辑 -->
+<!-- 表单弹窗已移除：知识点由 GitHub 仓库统一维护，不支持本地编辑/删除 -->
 <!-- 详情弹窗 -->
 <div class="mask center hidden" id="detailMask" onclick="if(event.target===this)closeDetail()">
   <div class="modal">
@@ -454,7 +561,8 @@
   var LS_DELETED = 'bdh_deleted_v1';     // 本地删除的云端卡片 id
   var LS_FORM = 'bdh_form_v1';           // 表单草稿
   var LS_DATA_CACHE = 'bdh_data_cache_v1'; // data.json 离线缓存
-  var STATE = { rows: [], baseLoaded: false, stackFilter: '', typeFilter: '', keyword: '', editingId: '', todayOpen: true, tab: 'library' };
+  var LS_IV_CACHE = 'bdh_iv_cache_v1';   // interview.json 离线缓存
+  var STATE = { rows: [], baseLoaded: false, stackFilter: '', typeFilter: '', keyword: '', editingId: '', todayOpen: true, tab: 'library', ivView: 'bank', ivBank: null };
   var CONFIRM_CB = null;
 
   /* ---------- 工具 ---------- */
@@ -499,12 +607,12 @@
 
   /* ---------- 加载数据 ---------- */
   function init() {
-    renderSelectOptions();
     loadData();
   }
 
   function loadData() {
     setSync(null);
+    loadBank();
     var cacheBust = todayStr().replace(/-/g, '');
     fetch('data.json?t=' + cacheBust, { cache: 'no-cache' }).then(function (res) {
       if (!res.ok) throw new Error('http ' + res.status);
@@ -546,6 +654,7 @@
         '知识类型': c.types || [],
         '掌握度': c.level || '待学习',
         '详细内容': c.content || '',
+        '结构图': c.diagram || '',
         '复习次数': c.reviewCount || 0,
         '上次复习': c.lastReview || '',
         '下次复习': c.nextReview || ''
@@ -559,6 +668,7 @@
         _id: c.id, _base: false,
         '名称': c.name, '技术栈': c.stack, '知识类型': c.types || [],
         '掌握度': c.level || '待学习', '详细内容': c.content || '',
+        '结构图': c.diagram || '',
         '复习次数': c.reviewCount || 0, '上次复习': c.lastReview || '', '下次复习': c.nextReview || ''
       });
     });
@@ -664,7 +774,8 @@
       for (var i = 0; i < grp.list.length; i++) {
         (function (r, cls, label) {
           var du = daysUntil(r['下次复习']);
-          var div = document.createElement('div'); div.className = 't-item';
+          var div = document.createElement('div'); div.className = 't-item clickable';
+          div.title = '点击即可打卡完成复习';
           var badge = document.createElement('span'); badge.className = 't-badge ' + cls;
           var info = document.createElement('div'); info.className = 't-info';
           var name = document.createElement('div'); name.className = 't-name' + (cls === 'over' ? ' overdue' : '');
@@ -672,14 +783,15 @@
           var meta = document.createElement('div'); meta.className = 't-meta';
           var metaTxt = (r['技术栈'] || '') + ' · ';
           if (cls === 'over') { metaTxt += '逾期 ' + (-du) + ' 天'; } else if (cls === 'tdy') { metaTxt += '今天到期'; } else { metaTxt += fmtDate(r['下次复习']) + ' 到期'; }
-          metaTxt += ' · 已复习 ' + (r['复习次数'] || 0) + ' 次';
+          metaTxt += ' · 已复习 ' + (r['复习次数'] || 0) + ' 次 · 点击打卡';
           meta.innerHTML = metaTxt;
           var act = document.createElement('div'); act.className = 't-act';
           var btn = document.createElement('button');
           btn.className = 'btn-done' + (cls === 'over' ? ' overdue' : '');
           btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' + (cls === 'over' ? '补复习' : '完成复习');
-          btn.onclick = function () { completeReview(r); };
+          btn.onclick = function (e) { e.stopPropagation(); completeReview(r); };
           act.appendChild(btn);
+          div.onclick = function () { completeReview(r); };
           div.appendChild(badge); div.appendChild(info); div.appendChild(act);
           info.appendChild(name); info.appendChild(meta);
           body.appendChild(div);
@@ -718,6 +830,7 @@
       html += '<div class="k-name">' + esc(r['名称'] || '未命名') + '</div>';
       html += '<div class="k-types">';
       for (var i = 0; i < types.length; i++) { html += '<span class="k-type">' + esc(types[i]) + '</span>'; }
+      if (r['结构图']) html += '<span class="k-diabadge">📐 图解</span>';
       html += '</div>';
       var lv = r['掌握度'] || '待学习';
       html += '<div class="k-foot">';
@@ -734,7 +847,7 @@
 
   function renderInterview() {
     var rows = STATE.rows.filter(function (r) { return hasType(r, '面试题'); });
-    $('cntIq').textContent = rows.length;
+    updateIvCount();
     var list = $('iqList'); list.innerHTML = '';
     var empty = $('iqEmpty'); empty.innerHTML = '';
     if (!rows.length) {
@@ -751,7 +864,8 @@
       chev.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
       head.appendChild(idxEl); head.appendChild(q); head.appendChild(st); head.appendChild(chev);
       var body = document.createElement('div'); body.className = 'iq-body';
-      body.innerHTML = '<div class="detail-markdown">' + renderMarkdown(r['详细内容']) + '</div>';
+      body.innerHTML = (r['结构图'] ? '<div class="detail-diagram"><div class="dg-cap">📐 结构示意</div>' + r['结构图'] + '</div>' : '')
+        + '<div class="detail-markdown">' + renderMarkdown(r['详细内容']) + '</div>';
       var acts = document.createElement('div'); acts.className = 'iq-actions';
       var lvBtn = document.createElement('button'); lvBtn.className = 'btn-ghost';
       lvBtn.innerHTML = '掌握度：' + esc(r['掌握度'] || '待学习');
@@ -924,6 +1038,7 @@
     return {
       id: r._id, name: r['名称'], stack: r['技术栈'], types: r['知识类型'] || [],
       level: r['掌握度'] || '待学习', content: r['详细内容'] || '',
+      diagram: r['结构图'] || '',
       reviewCount: r['复习次数'] || 0, lastReview: r['上次复习'] || '', nextReview: r['下次复习'] || ''
     };
   }
@@ -1027,17 +1142,17 @@
     $('detailMeta').innerHTML = meta;
     $('detailTitle').textContent = r['名称'] || '未命名';
     var contentEl = $('detailContent');
-    contentEl.innerHTML = renderMarkdown(r['详细内容']) || '<p style="color:var(--text3)">（暂无详细内容，点击编辑补充）</p>';
+    var diaHtml = '';
+    if (r['结构图']) {
+      diaHtml = '<div class="detail-diagram"><div class="dg-cap">📐 结构示意（辅助记忆）</div>' + r['结构图'] + '</div>';
+    }
+    contentEl.innerHTML = diaHtml + (renderMarkdown(r['详细内容']) || '<p style="color:var(--text3)">（暂无详细内容，可前往 GitHub 仓库 data.json 补充）</p>');
     var foot = '';
     var du = daysUntil(r['下次复习']);
     foot += '<div style="width:100%;font-size:12px;color:var(--text2);margin-bottom:6px">已复习 ' + (r['复习次数'] || 0) + ' 次 · 上次复习 ' + (r['上次复习'] ? fmtDate(r['上次复习']) : '从未') + ' · 下次 ' + (du < 0 ? '<b style="color:var(--red)">逾期 ' + (-du) + ' 天</b>' : fmtDate(r['下次复习'])) + '</div>';
-    foot += '<button class="btn-done" onclick="window.__bdComplete && window.__bdComplete()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>完成复习</button>';
-    foot += '<button class="btn-ghost" onclick="window.__bdEdit && window.__bdEdit()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>编辑</button>';
-    foot += '<button class="btn-ghost" style="color:var(--red);border-color:#fecaca" onclick="window.__bdDel && window.__bdDel()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>删除</button>';
+    foot += '<button class="btn-done" style="width:100%" onclick="window.__bdComplete && window.__bdComplete()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' + (du < 0 ? '补复习' : '完成复习') + '</button>';
     $('detailActions').innerHTML = foot;
     window.__bdComplete = function () { completeReview(r); renderDetailFresh(); };
-    window.__bdEdit = function () { closeDetail(); openForm(r); };
-    window.__bdDel = function () { closeDetail(); confirmDialog('删除知识卡片', '确定删除「' + (r['名称'] || '') + '」吗？（云端卡片仅在本机隐藏，不影响仓库数据）', function () { deleteRecord(r); }); };
     $('detailMask').classList.remove('hidden');
   }
   function renderDetailFresh() { if (DETAIL_ROW) openDetail(DETAIL_ROW); }
@@ -1076,7 +1191,7 @@
 
   /* ---------- 导出 / 导入 ---------- */
   function exportJSON() {
-    var payload = { app: '大数据知识巩固台', exportedAt: new Date().toISOString(), count: STATE.rows.length, rows: STATE.rows.map(function (r) { return rowToCard(r); }) };
+    var payload = { app: 'zhongwang 的大数据宝典', exportedAt: new Date().toISOString(), count: STATE.rows.length, rows: STATE.rows.map(function (r) { return rowToCard(r); }) };
     var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
@@ -1124,6 +1239,116 @@
       } catch (e) { toast('备份文件解析失败'); input.value = ''; }
     };
     reader.readAsText(file, 'utf-8');
+  }
+
+  /* ---------- 面试专题：题库 ---------- */
+  function loadBank() {
+    var cacheBust = todayStr().replace(/-/g, '');
+    fetch('interview.json?t=' + cacheBust, { cache: 'no-cache' }).then(function (res) {
+      if (!res.ok) throw new Error('http ' + res.status);
+      return res.json();
+    }).then(function (bank) {
+      lsSet(LS_IV_CACHE, bank);
+      STATE.ivBank = bank;
+      renderBank();
+    }).catch(function () {
+      var cached = lsGet(LS_IV_CACHE, null);
+      if (cached && cached.categories) {
+        STATE.ivBank = cached;
+        renderBank();
+      } else {
+        STATE.ivBank = null;
+        var el = $('bankList');
+        if (el) el.innerHTML = '<div class="empty-state"><div>题库加载失败，请刷新重试</div></div>';
+        $('bankMeta').textContent = '';
+      }
+    });
+  }
+
+  function bankTotal(bank) {
+    var n = 0;
+    (bank.categories || []).forEach(function (c) { n += c.questions.length; });
+    return n;
+  }
+
+  function updateIvCount() {
+    var myIq = STATE.rows.filter(function (r) { return hasType(r, '面试题'); }).length;
+    $('cntIq').textContent = (STATE.ivBank ? bankTotal(STATE.ivBank) : 0) + myIq;
+  }
+
+  function renderBank() {
+    var bank = STATE.ivBank;
+    updateIvCount();
+    if (!bank) return;
+    $('bankMeta').textContent = bankTotal(bank) + ' 道高频题 · ' + bank.categories.length + ' 大分类 · 更新于 ' + (bank.updated || '');
+    var list = $('bankList'); list.innerHTML = '';
+    bank.categories.forEach(function (cat, ci) {
+      var item = document.createElement('div'); item.className = 'cat-item' + (ci === 0 ? ' open' : '');
+      var head = document.createElement('div'); head.className = 'cat-head';
+      head.innerHTML = '<h3>' + esc(cat.name) + '</h3><span class="cat-count">' + cat.questions.length + ' 题</span>'
+        + '<span class="iq-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>';
+      head.onclick = function () { item.classList.toggle('open'); };
+      var body = document.createElement('div'); body.className = 'cat-body';
+      cat.questions.forEach(function (q, qi) {
+        var bi = document.createElement('div'); bi.className = 'bq-item';
+        var bh = document.createElement('div'); bh.className = 'bq-head';
+        var tagsHtml = '';
+        (q.tags || []).forEach(function (t) {
+          tagsHtml += '<span class="bq-tag' + (t === '高频' ? ' hot' : '') + '">' + esc(t) + '</span>';
+        });
+        bh.innerHTML = '<span class="bq-idx">' + (qi + 1) + '</span>'
+          + '<div style="flex:1"><div class="bq-q">' + esc(q.q) + '</div>'
+          + (tagsHtml ? '<div class="bq-tags">' + tagsHtml + '</div>' : '') + '</div>'
+          + '<span class="bq-reveal">显示答案 ▾</span>';
+        bh.onclick = function () {
+          bi.classList.toggle('open');
+          var rv = bh.querySelector('.bq-reveal');
+          rv.textContent = bi.classList.contains('open') ? '收起答案 ▴' : '显示答案 ▾';
+        };
+        var ans = document.createElement('div'); ans.className = 'bq-ans detail-markdown';
+        ans.innerHTML = renderMarkdown(q.a);
+        bi.appendChild(bh); bi.appendChild(ans);
+        body.appendChild(bi);
+      });
+      item.appendChild(head); item.appendChild(body);
+      list.appendChild(item);
+    });
+  }
+
+  function switchIvView(v) {
+    STATE.ivView = v;
+    $('subBank').classList.toggle('on', v === 'bank');
+    $('subMine').classList.toggle('on', v === 'mine');
+    $('ivBank').classList.toggle('hidden', v !== 'bank');
+    $('ivMine').classList.toggle('hidden', v !== 'mine');
+  }
+
+  function randomQuestion() {
+    var bank = STATE.ivBank;
+    if (!bank || !bank.categories.length) { toast('题库未加载'); return; }
+    var pool = [];
+    bank.categories.forEach(function (c) {
+      c.questions.forEach(function (q) { pool.push({ cat: c.name, q: q }); });
+    });
+    var pick = pool[Math.floor(Math.random() * pool.length)];
+    switchTab('interview');
+    switchIvView('bank');
+    var list = $('bankList');
+    var items = list.querySelectorAll('.bq-item');
+    var target = null;
+    for (var i = 0; i < items.length; i++) {
+      var qEl = items[i].querySelector('.bq-q');
+      if (qEl && qEl.textContent === pick.q.q) { target = items[i]; break; }
+    }
+    if (target) {
+      var catItem = target.closest ? target.closest('.cat-item') : null;
+      if (catItem) catItem.classList.add('open');
+      target.classList.add('open');
+      var rv = target.querySelector('.bq-reveal');
+      if (rv) rv.textContent = '收起答案 ▴';
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    toast('随机抽到【' + pick.cat + '】先自己作答，再展开对照');
   }
 
   /* ---------- Tab ---------- */
@@ -1182,6 +1407,23 @@
   }
 
   /* ---------- 启动 ---------- */
+  // 将内联 onclick/oninput/onchange 引用的函数暴露到全局作用域
+  window.switchTab = switchTab;
+  window.toggleToday = toggleToday;
+  window.setStackFilter = setStackFilter;
+  window.setTypeFilter = setTypeFilter;
+  window.onSearch = onSearch;
+  window.openForm = openForm;
+  window.closeForm = closeForm;
+  window.submitForm = submitForm;
+  window.closeDetail = closeDetail;
+  window.closeConfirm = closeConfirm;
+  window.confirmAction = confirmAction;
+  window.openClearModal = openClearModal;
+  window.exportJSON = exportJSON;
+  window.importJSON = importJSON;
+  window.switchIvView = switchIvView;
+  window.randomQuestion = randomQuestion;
   window.addEventListener('DOMContentLoaded', init);
 })();
 </script>
