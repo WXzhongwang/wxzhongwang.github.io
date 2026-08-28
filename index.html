@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>zhongwang 的大数据宝典</title>
 <!-- 静态站点版：数据来自同目录 data.json（GitHub 仓库维护），复习进度保存在浏览器本地 -->
 <style>
@@ -249,9 +249,9 @@
   /* ===== 响应式 ===== */
   @media (max-width: 767px) {
     body { padding-bottom: 84px; font-size: 14px; }
-    .wrap { padding: 0 10px; }
+    .wrap { padding: 0 12px; }
     /* Header */
-    .hd-inner { padding: 13px 10px; gap: 10px; }
+    .hd-inner { padding: 12px 12px; gap: 10px; }
     .hd-logo { width: 36px; height: 36px; border-radius: 10px; }
     .hd-logo svg { width: 20px; height: 20px; }
     .hd-title { font-size: 16px; }
@@ -262,16 +262,16 @@
     .hd-btn svg { width: 16px; height: 16px; }
     .sync-pill { padding: 4px 10px; font-size: 11px; }
     /* 备份提示 */
-    .backup-tip { margin-top: 10px; padding: 8px 10px; font-size: 12px; gap: 6px; }
+    .backup-tip { margin: 10px 0 0; padding: 8px 12px; font-size: 12px; gap: 6px; }
     .backup-tip svg { width: 14px; height: 14px; }
     /* 今日复习 */
     .today-card { margin-top: 10px; }
-    .today-head { padding: 12px; gap: 8px; flex-wrap: wrap; }
+    .today-head { padding: 13px 14px; gap: 8px; flex-wrap: wrap; }
     .today-head h2 { font-size: 15px; }
     .today-stats { gap: 4px; }
     .stat-chip { font-size: 11px; padding: 2px 8px; }
-    .today-body { padding: 6px 12px 12px; }
-    .t-item { padding: 10px 2px; gap: 8px; }
+    .today-body { padding: 6px 14px 12px; }
+    .t-item { padding: 11px 4px; gap: 8px; }
     .t-item.clickable:hover { background: transparent; }
     .t-item.clickable:active { background: var(--primary-soft); }
     .t-name { font-size: 13.5px; }
@@ -344,9 +344,9 @@
     .mask.center { align-items: flex-end; padding: 0; }
     .modal { max-width: 100%; border-radius: 14px 14px 0 0; max-height: 92vh; animation: slideUp .22s ease; }
     .mask.center .modal { border-radius: 14px 14px 0 0; max-height: 92vh; animation: slideUp .22s ease; }
-    .modal-head { padding: 14px 14px 10px; }
+    .modal-head { padding: 15px 16px 10px; }
     .modal-head h3 { font-size: 15px; }
-    .modal-body { padding: 0 14px 18px; }
+    .modal-body { padding: 0 16px 20px; }
     /* Toast */
     .toast { bottom: 96px; font-size: 12px; padding: 8px 14px; max-width: 90vw; }
     /* 隐藏 PC Tab（用底部导航替代） */
@@ -397,22 +397,6 @@
     <span>知识库已积累 <b id="backupCount">30</b> 条，且复习进度仅保存在本机浏览器，建议点击右上角「导出备份」保存 JSON 快照。</span>
   </div>
 
-  <!-- 今天要处理 -->
-  <div class="today-card">
-    <div class="today-head" onclick="toggleToday()">
-      <h2>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-        今天要处理
-      </h2>
-      <div class="today-stats">
-        <span class="stat-chip due" id="statDue">逾期 0</span>
-        <span class="stat-chip today" id="statToday">今日 0</span>
-        <span class="stat-chip" id="statSoon">近3天 0</span>
-      </div>
-    </div>
-    <div class="today-body" id="todayBody"></div>
-  </div>
-
   <!-- Tab -->
   <div class="tabs">
     <button class="tab on" data-tab="library" onclick="switchTab('library')">
@@ -431,6 +415,21 @@
 
   <!-- 知识卡片库 -->
   <section id="tab-library">
+    <!-- 今天要处理（仅卡片库页显示） -->
+    <div class="today-card">
+      <div class="today-head" onclick="toggleToday()">
+        <h2>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          今天要处理
+        </h2>
+        <div class="today-stats">
+          <span class="stat-chip due" id="statDue">逾期 0</span>
+          <span class="stat-chip today" id="statToday">今日 0</span>
+          <span class="stat-chip" id="statSoon">近3天 0</span>
+        </div>
+      </div>
+      <div class="today-body" id="todayBody"></div>
+    </div>
     <div class="filter-bar">
       <div class="search-box">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -741,7 +740,7 @@
         (function (r, cls, label) {
           var du = daysUntil(r['下次复习']);
           var div = document.createElement('div'); div.className = 't-item clickable';
-          div.title = '点击即可打卡完成复习';
+          div.title = '点击查看卡片详情';
           var badge = document.createElement('span'); badge.className = 't-badge ' + cls;
           var info = document.createElement('div'); info.className = 't-info';
           var name = document.createElement('div'); name.className = 't-name' + (cls === 'over' ? ' overdue' : '');
@@ -749,7 +748,7 @@
           var meta = document.createElement('div'); meta.className = 't-meta';
           var metaTxt = (r['技术栈'] || '') + ' · ';
           if (cls === 'over') { metaTxt += '逾期 ' + (-du) + ' 天'; } else if (cls === 'tdy') { metaTxt += '今天到期'; } else { metaTxt += fmtDate(r['下次复习']) + ' 到期'; }
-          metaTxt += ' · 已复习 ' + (r['复习次数'] || 0) + ' 次 · 点击打卡';
+          metaTxt += ' · 已复习 ' + (r['复习次数'] || 0) + ' 次 · 点击查看';
           meta.innerHTML = metaTxt;
           var act = document.createElement('div'); act.className = 't-act';
           var btn = document.createElement('button');
@@ -757,7 +756,7 @@
           btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' + (cls === 'over' ? '补复习' : '完成复习');
           btn.onclick = function (e) { e.stopPropagation(); completeReview(r); };
           act.appendChild(btn);
-          div.onclick = function () { completeReview(r); };
+          div.onclick = function () { openDetail(r); };
           div.appendChild(badge); div.appendChild(info); div.appendChild(act);
           info.appendChild(name); info.appendChild(meta);
           body.appendChild(div);
