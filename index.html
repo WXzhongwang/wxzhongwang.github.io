@@ -534,19 +534,7 @@
   </div>
 </div>
 
-<!-- 确认弹窗 -->
-<div class="mask center hidden" id="confirmMask" onclick="if(event.target===this)closeConfirm()">
-  <div class="modal" style="max-width:380px">
-    <div class="modal-head"><h3 id="confirmTitle">确认操作</h3></div>
-    <div class="modal-body">
-      <p id="confirmText" style="font-size:14px;color:var(--text2);margin-bottom:16px"></p>
-      <div style="display:flex;gap:10px">
-        <button class="btn-dialog gray" onclick="closeConfirm()">取消</button>
-        <button class="btn-dialog red" id="confirmOkBtn" onclick="confirmAction()">确定</button>
-      </div>
-    </div>
-  </div>
-</div>
+<!-- 确认弹窗已移除：知识点不支持删除/清空，无需二次确认 -->
 
 <div class="toast" id="toast"></div>
 
@@ -607,6 +595,8 @@
 
   /* ---------- 加载数据 ---------- */
   function init() {
+    renderStackChips();
+    renderTypeChips();
     loadData();
   }
 
@@ -675,31 +665,7 @@
     return rows;
   }
 
-  /* ---------- 表单选项 ---------- */
-  function renderSelectOptions() {
-    var stackSel = $('formMask').querySelector('[name="技术栈"]');
-    var levelSel = $('formMask').querySelector('[name="掌握度"]');
-    stackSel.innerHTML = '<option value="">请选择技术栈</option>';
-    levelSel.innerHTML = '<option value="">请选择</option>';
-    for (var i = 0; i < STACKS.length; i++) {
-      var o = document.createElement('option'); o.value = STACKS[i]; o.textContent = STACKS[i]; stackSel.appendChild(o);
-    }
-    for (var j = 0; j < LEVELS.length; j++) {
-      var o2 = document.createElement('option'); o2.value = LEVELS[j]; o2.textContent = LEVELS[j]; levelSel.appendChild(o2);
-    }
-    var tg = $('typeGroup'); tg.innerHTML = '';
-    for (var k = 0; k < TYPES.length; k++) {
-      (function (t) {
-        var label = document.createElement('label'); label.className = 'chk-item';
-        var cb = document.createElement('input'); cb.type = 'checkbox'; cb.value = t;
-        cb.addEventListener('change', function () { label.classList.toggle('on', cb.checked); });
-        label.appendChild(cb); label.appendChild(document.createTextNode(t)); tg.appendChild(label);
-      })(TYPES[k]);
-    }
-    renderStackChips();
-    renderTypeChips();
-  }
-
+  /* ---------- 筛选 chips ---------- */
   function renderStackChips() {
     var box = $('stackChips'); box.innerHTML = '';
     for (var i = 0; i < STACKS.length; i++) {
@@ -1043,90 +1009,7 @@
     };
   }
 
-  /* ---------- 表单 ---------- */
-  function openForm(row) {
-    STATE.editingId = row ? row._id : '';
-    $('formTitle').textContent = row ? '编辑知识卡片' : '新增知识卡片';
-    var nameEl = $('formMask').querySelector('[name="名称"]');
-    var stackSel = $('formMask').querySelector('[name="技术栈"]');
-    var levelSel = $('formMask').querySelector('[name="掌握度"]');
-    var dateEl = $('formMask').querySelector('[name="下次复习"]');
-    var contentEl = $('formMask').querySelector('[name="详细内容"]');
-    if (row) {
-      nameEl.value = row['名称'] || '';
-      stackSel.value = row['技术栈'] || '';
-      levelSel.value = row['掌握度'] || '';
-      dateEl.value = row['下次复习'] ? String(row['下次复习']).slice(0, 10) : '';
-      contentEl.value = row['详细内容'] || '';
-      var arr = row['知识类型'] || [];
-      var cbs = $('typeGroup').querySelectorAll('input');
-      for (var i = 0; i < cbs.length; i++) { cbs[i].checked = arr.indexOf(cbs[i].value) >= 0; }
-      refreshTypeGroup();
-    } else {
-      nameEl.value = ''; contentEl.value = ''; levelSel.value = '';
-      stackSel.value = '';
-      dateEl.value = addDays(todayStr(), 1);
-      var cbs2 = $('typeGroup').querySelectorAll('input');
-      for (var j = 0; j < cbs2.length; j++) { cbs2[j].checked = false; }
-      refreshTypeGroup();
-    }
-    $('formMask').classList.remove('hidden');
-  }
-  function closeForm() { $('formMask').classList.add('hidden'); STATE.editingId = ''; }
-  function refreshTypeGroup() {
-    var cbs = $('typeGroup').querySelectorAll('.chk-item');
-    for (var i = 0; i < cbs.length; i++) {
-      var cb = cbs[i].querySelector('input');
-      cbs[i].classList.toggle('on', cb.checked);
-    }
-  }
-
-  function submitForm() {
-    var nameEl = $('formMask').querySelector('[name="名称"]');
-    var stackSel = $('formMask').querySelector('[name="技术栈"]');
-    var levelSel = $('formMask').querySelector('[name="掌握度"]');
-    var dateEl = $('formMask').querySelector('[name="下次复习"]');
-    var contentEl = $('formMask').querySelector('[name="详细内容"]');
-    var name = nameEl.value.trim();
-    if (!name) { toast('请填写知识点名称'); return; }
-    if (!stackSel.value) { toast('请选择技术栈'); return; }
-    var checked = [];
-    var cbs = $('typeGroup').querySelectorAll('input:checked');
-    for (var i = 0; i < cbs.length; i++) { checked.push(cbs[i].value); }
-    if (!checked.length) { toast('请至少选择一个知识类型'); return; }
-    var nextDate = dateEl.value || addDays(todayStr(), 1);
-
-    if (STATE.editingId) {
-      var target = null;
-      STATE.rows.forEach(function (r) { if (r._id === STATE.editingId) target = r; });
-      if (target) {
-        target['名称'] = name; target['技术栈'] = stackSel.value; target['知识类型'] = checked;
-        target['掌握度'] = levelSel.value || '待学习'; target['详细内容'] = contentEl.value.trim();
-        target['下次复习'] = nextDate;
-        if (target._base) {
-          var prog = getProgress();
-          prog[target._id] = {
-            '名称': name, '技术栈': stackSel.value, '知识类型': checked,
-            '掌握度': levelSel.value || '待学习', '详细内容': contentEl.value.trim(),
-            '复习次数': target['复习次数'] || 0, '上次复习': target['上次复习'] || '', '下次复习': nextDate
-          };
-          lsSet(LS_PROGRESS, prog);
-        } else {
-          persistRow(target);
-        }
-        renderAll(); closeForm(); toast('已更新（本机保存）');
-        return;
-      }
-    }
-    var card = {
-      id: 'local_' + Date.now(), name: name, stack: stackSel.value, types: checked,
-      level: levelSel.value || '待学习', content: contentEl.value.trim(),
-      reviewCount: 0, lastReview: '', nextReview: nextDate
-    };
-    var custom = getCustom(); custom.unshift(card); lsSet(LS_CUSTOM, custom);
-    STATE.rows = buildRows(lsGet(LS_DATA_CACHE, []));
-    renderAll(); closeForm(); toast('已新增（本机保存）');
-  }
+  /* 表单相关函数已移除：知识点由 GitHub 仓库统一维护，不支持本地编辑/删除 */
 
   /* ---------- 详情 ---------- */
   var DETAIL_ROW = null;
@@ -1158,87 +1041,18 @@
   function renderDetailFresh() { if (DETAIL_ROW) openDetail(DETAIL_ROW); }
   function closeDetail() { $('detailMask').classList.add('hidden'); DETAIL_ROW = null; }
 
-  function deleteRecord(r) {
-    if (r._base) {
-      var deleted = getDeleted(); deleted.push(r._id); lsSet(LS_DELETED, deleted);
-    } else {
-      var custom = getCustom().filter(function (c) { return c.id !== r._id; });
-      lsSet(LS_CUSTOM, custom);
-    }
-    STATE.rows = buildRows(lsGet(LS_DATA_CACHE, []));
-    renderAll(); toast('已删除（本机生效）');
-  }
+  /* 删除/确认/导入相关函数已移除：知识点不支持本地编辑/删除/导入 */
 
-  /* ---------- 确认弹窗 ---------- */
-  function confirmDialog(title, text, cb) {
-    $('confirmTitle').textContent = title;
-    $('confirmText').textContent = text;
-    CONFIRM_CB = cb;
-    $('confirmMask').classList.remove('hidden');
-  }
-  function closeConfirm() { $('confirmMask').classList.add('hidden'); CONFIRM_CB = null; }
-  function confirmAction() { var cb = CONFIRM_CB; closeConfirm(); if (cb) cb(); }
-
-  function openClearModal() {
-    confirmDialog('清空本地进度',
-      '将清空本机的复习进度、新增卡片与隐藏记录（云端 data.json 不受影响），且不可恢复。建议先「导出备份」。确定继续吗？',
-      function () {
-        lsDel(LS_PROGRESS); lsDel(LS_CUSTOM); lsDel(LS_DELETED);
-        STATE.rows = buildRows(lsGet(LS_DATA_CACHE, []));
-        renderAll(); toast('已清空本地进度');
-      });
-  }
-
-  /* ---------- 导出 / 导入 ---------- */
+  /* ---------- 导出 ---------- */
   function exportJSON() {
     var payload = { app: 'zhongwang 的大数据宝典', exportedAt: new Date().toISOString(), count: STATE.rows.length, rows: STATE.rows.map(function (r) { return rowToCard(r); }) };
     var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
-    a.href = url; a.download = '大数据知识巩固台备份_' + todayStr() + '.json';
+    a.href = url; a.download = 'zhongwang大数据宝典备份_' + todayStr() + '.json';
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     URL.revokeObjectURL(url);
     toast('已导出 ' + STATE.rows.length + ' 条备份');
-  }
-
-  function importJSON(input) {
-    var file = input.files && input.files[0];
-    if (!file) return;
-    var reader = new FileReader();
-    reader.onload = function () {
-      try {
-        var data = JSON.parse(reader.result);
-        var rows = data.rows || data.results || [];
-        if (!rows.length) { toast('备份文件中没有数据'); input.value = ''; return; }
-        confirmDialog('导入恢复', '将导入 ' + rows.length + ' 条知识卡片为本机卡片（不影响云端仓库）。确定继续吗？', function () {
-          var custom = getCustom();
-          var existNames = {};
-          STATE.rows.forEach(function (r) { existNames[r['名称']] = 1; });
-          var ok = 0;
-          rows.forEach(function (c, idx) {
-            var name = c['名称'] || c.name;
-            if (!name || existNames[name]) return;
-            custom.unshift({
-              id: c.id || c._id || ('imp_' + Date.now() + '_' + idx),
-              name: name, stack: c['技术栈'] || c.stack || '其他',
-              types: c['知识类型'] || c.types || [],
-              level: c['掌握度'] || c.level || '待学习',
-              content: c['详细内容'] || c.content || '',
-              reviewCount: c['复习次数'] || c.reviewCount || 0,
-              lastReview: c['上次复习'] || c.lastReview || '',
-              nextReview: c['下次复习'] || c.nextReview || addDays(todayStr(), 1)
-            });
-            ok++;
-          });
-          lsSet(LS_CUSTOM, custom);
-          STATE.rows = buildRows(lsGet(LS_DATA_CACHE, []));
-          renderAll();
-          toast('导入完成：' + ok + ' 条（本机保存）');
-          input.value = '';
-        });
-      } catch (e) { toast('备份文件解析失败'); input.value = ''; }
-    };
-    reader.readAsText(file, 'utf-8');
   }
 
   /* ---------- 面试专题：题库 ---------- */
@@ -1413,15 +1227,8 @@
   window.setStackFilter = setStackFilter;
   window.setTypeFilter = setTypeFilter;
   window.onSearch = onSearch;
-  window.openForm = openForm;
-  window.closeForm = closeForm;
-  window.submitForm = submitForm;
   window.closeDetail = closeDetail;
-  window.closeConfirm = closeConfirm;
-  window.confirmAction = confirmAction;
-  window.openClearModal = openClearModal;
   window.exportJSON = exportJSON;
-  window.importJSON = importJSON;
   window.switchIvView = switchIvView;
   window.randomQuestion = randomQuestion;
   window.addEventListener('DOMContentLoaded', init);
