@@ -157,6 +157,7 @@
   .bq-item.open .bq-reveal { color: var(--text3); }
 
   /* ===== 统计 ===== */
+  #tab-stats { padding-top: 16px; }
   .stats-wrap { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
   .stat-card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px; }
   .stat-num { font-size: 26px; font-weight: 800; line-height: 1.2; }
@@ -411,6 +412,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
       学习统计
     </button>
+    <button class="tab" data-tab="algo" onclick="switchTab('algo')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 20H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10"></path><path d="M10 20v-6h6v6"></path><path d="M22 22l-5-5"></path><circle cx="17.5" cy="17.5" r="3.5"></circle></svg>
+      算法刷题<span class="tab-count" id="cntAlgo">0</span>
+    </button>
   </div>
 
   <!-- 知识卡片库 -->
@@ -496,6 +501,15 @@
       </div>
     </div>
   </section>
+
+  <!-- 算法刷题 -->
+  <section id="tab-algo" class="hidden">
+    <div class="algo-intro" style="margin:14px 0 10px; font-size:13px; color:var(--text2); background:var(--card); padding:12px 14px; border-radius:var(--radius); box-shadow:var(--shadow);">
+      LeetCode Hot 100 高频算法题专区，涵盖数组、链表、二叉树、动态规划、回溯等核心考点。
+    </div>
+    <div class="k-grid" id="algoGrid"></div>
+    <div id="algoEmpty"></div>
+  </section>
 </div>
 
 <!-- 底部移动端导航 -->
@@ -511,6 +525,10 @@
   <button class="bn-item" data-tab="stats" onclick="switchTab('stats')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
     统计
+  </button>
+  <button class="bn-item" data-tab="algo" onclick="switchTab('algo')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 20H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10"></path><path d="M10 20v-6h6v6"></path><path d="M22 22l-5-5"></path><circle cx="17.5" cy="17.5" r="3.5"></circle></svg>
+    算法
   </button>
 </nav>
 
@@ -714,6 +732,7 @@
     renderLibrary();
     renderInterview();
     renderStats();
+    renderAlgo();
     renderBackupTip();
     if (STATE.tab) switchTab(STATE.tab, true);
   }
@@ -864,6 +883,45 @@
     renderRing(mastered, learning, pending);
     renderStackBars(rows);
     renderTypeBars(rows);
+  }
+
+  function renderAlgo() {
+    var rows = STATE.rows.filter(function (r) { return r['技术栈'] === '算法'; });
+    $('cntAlgo').textContent = rows.length;
+    var grid = $('algoGrid'); grid.innerHTML = '';
+    var empty = $('algoEmpty'); empty.innerHTML = '';
+    if (!rows.length) {
+      empty.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 20H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10"></path><path d="M10 20v-6h6v6"></path><path d="M22 22l-5-5"></path><circle cx="17.5" cy="17.5" r="3.5"></circle></svg><div>暂无算法卡片<br>每日知识补充中…</div></div>';
+      return;
+    }
+    rows.forEach(function (r) {
+      var du = daysUntil(r['下次复习']);
+      var card = document.createElement('div');
+      card.className = 'k-card' + (du < 0 ? ' overdue' : '');
+      var stack = r['技术栈'] || '';
+      var types = r['知识类型'] || [];
+      var html = '';
+      html += '<div class="k-top">';
+      if (stack) html += '<span class="k-stack">' + esc(stack) + '</span>';
+      if (du < 0) html += '<span class="k-ov">逾期 ' + (-du) + ' 天</span>';
+      if (!r._base) html += '<span class="k-type" style="background:var(--amber-soft);color:#b45309">本地</span>';
+      html += '</div>';
+      html += '<div class="k-name">' + esc(r['名称'] || '未命名') + '</div>';
+      html += '<div class="k-types">';
+      for (var i = 0; i < types.length; i++) { html += '<span class="k-type">' + esc(types[i]) + '</span>'; }
+      if (r['结构图']) html += '<span class="k-diabadge">📐 图解</span>';
+      html += '</div>';
+      var lv = r['掌握度'] || '待学习';
+      html += '<div class="k-foot">';
+      html += '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>';
+      html += '<span class="k-next' + (du < 0 ? ' due' : '') + '">' + (du < 0 ? '应于 ' + fmtDate(r['下次复习']) + ' 复习' : (du === 0 ? '今天复习' : fmtDate(r['下次复习']) + ' 复习')) + '</span>';
+      html += '<span class="grow"></span>';
+      html += '<span class="k-level ' + levelClass(lv) + '">' + esc(lv) + '</span>';
+      html += '</div>';
+      card.innerHTML = html;
+      card.onclick = function () { openDetail(r); };
+      grid.appendChild(card);
+    });
   }
 
   function renderRing(mastered, learning, pending) {
@@ -1170,8 +1228,8 @@
     for (var i = 0; i < tabs.length; i++) { tabs[i].classList.toggle('on', tabs[i].getAttribute('data-tab') === name); }
     var bn = document.querySelectorAll('.bn-item');
     for (var j = 0; j < bn.length; j++) { bn[j].classList.toggle('on', bn[j].getAttribute('data-tab') === name); }
-    var map = { library: 'tab-library', interview: 'tab-interview', stats: 'tab-stats' };
-    var ids = ['tab-library', 'tab-interview', 'tab-stats'];
+    var map = { library: 'tab-library', interview: 'tab-interview', stats: 'tab-stats', algo: 'tab-algo' };
+    var ids = ['tab-library', 'tab-interview', 'tab-stats', 'tab-algo'];
     for (var k = 0; k < ids.length; k++) { $(ids[k]).classList.toggle('hidden', ids[k] !== map[name]); }
     if (!skipScroll) { window.scrollTo(0, 0); }
   }
