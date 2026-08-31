@@ -1034,10 +1034,9 @@
     foot += '<div style="width:100%;font-size:12px;color:var(--text2);margin-bottom:6px">已复习 ' + (r['复习次数'] || 0) + ' 次 · 上次复习 ' + (r['上次复习'] ? fmtDate(r['上次复习']) : '从未') + ' · 下次 ' + (du < 0 ? '<b style="color:var(--red)">逾期 ' + (-du) + ' 天</b>' : fmtDate(r['下次复习'])) + '</div>';
     foot += '<button class="btn-done" style="width:100%" onclick="window.__bdComplete && window.__bdComplete()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' + (du < 0 ? '补复习' : '完成复习') + '</button>';
     $('detailActions').innerHTML = foot;
-    window.__bdComplete = function () { completeReview(r); renderDetailFresh(); };
+    window.__bdComplete = function () { completeReview(r); closeDetail(); };
     $('detailMask').classList.remove('hidden');
   }
-  function renderDetailFresh() { if (DETAIL_ROW) openDetail(DETAIL_ROW); }
   function closeDetail() { $('detailMask').classList.add('hidden'); DETAIL_ROW = null; }
 
   /* 删除/确认/导入相关函数已移除：知识点不支持本地编辑/删除/导入 */
