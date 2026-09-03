@@ -3,398 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>zhongwang 的大数据宝典</title>
-<!-- 静态站点版：数据来自同目录 data.json（GitHub 仓库维护），复习进度保存在浏览器本地 -->
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  :root {
-    --primary: #2563eb; --primary-soft: #eff6ff; --accent: #0ea5e9;
-    --bg: #f5f7fb; --card: #ffffff; --text: #0f172a; --text2: #64748b; --text3: #94a3b8;
-    --line: #e8edf4; --red: #ef4444; --red-soft: #fef2f2; --green: #10b981; --green-soft: #ecfdf5;
-    --amber: #f59e0b; --amber-soft: #fffbeb; --violet: #8b5cf6; --radius: 14px;
-    --shadow: 0 1px 3px rgba(15,23,42,.06), 0 4px 16px rgba(15,23,42,.05);
-  }
-  html, body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.6; }
-  body { padding-bottom: 76px; }
-  button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
-  input, select, textarea { font-family: inherit; font-size: 16px; color: var(--text); }
-  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 14px; }
-  .hidden { display: none !important; }
-
-  /* ===== Header ===== */
-  header { background: linear-gradient(135deg, #1d4ed8, #0ea5e9); color: #fff; }
-  .hd-inner { display: flex; align-items: center; gap: 12px; padding: 18px 14px; max-width: 1080px; margin: 0 auto; flex-wrap: wrap; }
-  .hd-logo { width: 40px; height: 40px; border-radius: 11px; background: rgba(255,255,255,.16); display: flex; align-items: center; justify-content: center; flex: none; }
-  .hd-title { font-size: 18px; font-weight: 700; letter-spacing: .3px; }
-  .hd-sub { font-size: 12px; opacity: .82; margin-top: 1px; }
-  .hd-right { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .sync-pill { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,.16); border-radius: 999px; padding: 5px 12px; font-size: 12px; }
-  .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #fbbf24; flex: none; }
-  .sync-dot.ok { background: #4ade80; }
-  .sync-dot.off { background: #f87171; }
-  .hd-btn { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,.16); border-radius: 10px; padding: 7px 12px; font-size: 13px; color: #fff; transition: background .15s; }
-  .hd-btn:hover { background: rgba(255,255,255,.26); }
-  .hd-btn svg { width: 15px; height: 15px; }
-
-  /* ===== 备份提示 ===== */
-  .backup-tip { max-width: 1080px; margin: 12px auto 0; padding: 10px 14px; background: var(--amber-soft); border: 1px solid #fde68a; border-radius: 12px; color: #92400e; font-size: 13px; display: flex; align-items: center; gap: 8px; }
-  .backup-tip svg { width: 16px; height: 16px; flex: none; }
-  .backup-tip b { font-weight: 600; }
-
-  /* ===== 今日复习 ===== */
-  .today-card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); margin-top: 14px; overflow: hidden; }
-  .today-head { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--line); cursor: pointer; }
-  .today-head h2 { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-  .today-head h2 svg { width: 18px; height: 18px; color: var(--primary); }
-  .today-stats { margin-left: auto; display: flex; gap: 6px; }
-  .stat-chip { font-size: 12px; padding: 3px 10px; border-radius: 999px; background: var(--bg); color: var(--text2); }
-  .stat-chip.due { background: var(--red-soft); color: var(--red); font-weight: 600; }
-  .stat-chip.today { background: var(--primary-soft); color: var(--primary); font-weight: 600; }
-  .today-body { padding: 8px 16px 14px; }
-  .t-item { display: flex; align-items: center; gap: 10px; padding: 11px 4px; border-bottom: 1px dashed var(--line); }
-  .t-item:last-child { border-bottom: none; }
-  .t-badge { flex: none; width: 8px; height: 8px; border-radius: 50%; }
-  .t-badge.over { background: var(--red); }
-  .t-badge.tdy { background: var(--primary); }
-  .t-badge.soon { background: var(--amber); }
-  .t-info { flex: 1; min-width: 0; }
-  .t-name { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .t-name.overdue { color: var(--red); }
-  .t-meta { font-size: 12px; color: var(--text2); margin-top: 2px; }
-  .t-meta b.overdue { color: var(--red); }
-  .t-act { flex: none; }
-  .btn-done { display: inline-flex; align-items: center; gap: 5px; background: var(--primary); color: #fff; font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 10px; min-height: 40px; transition: opacity .15s; }
-  .btn-done:hover { opacity: .88; }
-  .btn-done svg { width: 14px; height: 14px; }
-  .btn-done.overdue { background: var(--red); }
-  .today-empty { text-align: center; padding: 22px 10px; color: var(--text3); font-size: 13px; }
-
-  /* ===== Tab ===== */
-  .tabs { max-width: 1080px; margin: 16px auto 0; display: flex; gap: 4px; background: var(--card); border-radius: var(--radius); padding: 5px; box-shadow: var(--shadow); }
-  .tab { flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px; padding: 11px 6px; border-radius: 10px; font-size: 14px; font-weight: 600; color: var(--text2); min-height: 44px; transition: all .15s; }
-  .tab svg { width: 16px; height: 16px; }
-  .tab.on { background: var(--primary); color: #fff; box-shadow: 0 2px 8px rgba(37,99,235,.35); }
-  .tab .tab-count { font-size: 11px; background: rgba(0,0,0,.08); border-radius: 999px; padding: 1px 7px; }
-  .tab.on .tab-count { background: rgba(255,255,255,.25); }
-
-  /* ===== 筛选区 ===== */
-  .filter-bar { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; align-items: center; }
-  .search-box { position: relative; flex: 1; min-width: 200px; }
-  .search-box svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; color: var(--text3); }
-  .search-box input { width: 100%; border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 11px 12px 11px 36px; min-height: 44px; box-shadow: var(--shadow); }
-  .chip { border: 1px solid var(--line); background: var(--card); color: var(--text2); border-radius: 999px; padding: 7px 14px; font-size: 13px; min-height: 36px; transition: all .15s; }
-  .chip.on { background: var(--primary); border-color: var(--primary); color: #fff; }
-
-  /* ===== 知识卡片网格 ===== */
-  .k-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
-  .k-card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 14px 12px; cursor: pointer; transition: transform .12s, box-shadow .12s; border: 1px solid transparent; position: relative; }
-  .k-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(15,23,42,.09); }
-  .k-card.overdue { border-color: #fecaca; }
-  .k-top { display: flex; align-items: center; gap: 8px; }
-  .k-stack { font-size: 11px; font-weight: 700; color: var(--primary); background: var(--primary-soft); padding: 3px 9px; border-radius: 999px; flex: none; }
-  .k-ov { font-size: 11px; font-weight: 700; color: var(--red); background: var(--red-soft); padding: 3px 9px; border-radius: 999px; flex: none; }
-  .k-name { font-size: 15px; font-weight: 700; margin: 9px 0 6px; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .k-types { display: flex; flex-wrap: wrap; gap: 5px; }
-  .k-type { font-size: 11px; color: var(--text2); background: var(--bg); padding: 2px 8px; border-radius: 6px; }
-  .k-foot { display: flex; align-items: center; gap: 6px; margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--line); font-size: 12px; color: var(--text2); }
-  .k-foot svg { width: 13px; height: 13px; color: var(--text3); }
-  .k-foot .grow { flex: 1; }
-  .k-level { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; }
-  .k-level.l0 { background: var(--bg); color: var(--text2); }
-  .k-level.l1 { background: var(--amber-soft); color: #b45309; }
-  .k-level.l2 { background: var(--green-soft); color: var(--green); }
-  .k-next.due { color: var(--red); font-weight: 600; }
-
-  .empty-state { text-align: center; padding: 48px 16px; color: var(--text3); }
-  .empty-state svg { width: 44px; height: 44px; opacity: .4; margin-bottom: 10px; }
-
-  /* ===== 面试题列表 ===== */
-  .iq-list { display: flex; flex-direction: column; gap: 10px; }
-  .iq-item { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
-  .iq-head { display: flex; align-items: center; gap: 10px; padding: 13px 14px; cursor: pointer; }
-  .iq-idx { flex: none; width: 26px; height: 26px; border-radius: 8px; background: var(--primary-soft); color: var(--primary); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
-  .iq-q { flex: 1; font-size: 14px; font-weight: 600; line-height: 1.5; }
-  .iq-stack { font-size: 11px; color: var(--text2); background: var(--bg); padding: 2px 8px; border-radius: 6px; flex: none; }
-  .iq-chev { flex: none; color: var(--text3); transition: transform .2s; }
-  .iq-chev svg { width: 16px; height: 16px; display: block; }
-  .iq-item.open .iq-chev { transform: rotate(180deg); }
-  .iq-body { display: none; border-top: 1px dashed var(--line); padding: 12px 14px 14px; }
-  .iq-item.open .iq-body { display: block; }
-  .iq-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-
-  /* ===== 结构图 ===== */
-  .detail-diagram { background: #f8fafc; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin: 2px 0 12px; }
-  .detail-diagram .dg-cap { font-size: 11px; color: var(--text3); text-align: center; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; gap: 4px; }
-  .detail-diagram svg { width: 100%; height: auto; display: block; }
-  .k-diabadge { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: #0e7490; background: #ecfeff; padding: 2px 8px; border-radius: 6px; }
-
-  /* ===== 面试专题：子视图 ===== */
-  .subtabs { display: flex; gap: 6px; margin: 14px 0 4px; flex-wrap: wrap; align-items: center; }
-  .subtab { border: 1px solid var(--line); background: var(--card); color: var(--text2); border-radius: 999px; padding: 8px 16px; font-size: 13px; font-weight: 600; min-height: 38px; }
-  .subtab.on { background: var(--primary); border-color: var(--primary); color: #fff; }
-  .bank-tool { display: flex; gap: 8px; margin: 10px 0 12px; flex-wrap: wrap; align-items: center; }
-  .bank-meta { font-size: 12px; color: var(--text3); }
-  .btn-random { display: inline-flex; align-items: center; gap: 6px; background: var(--violet); color: #fff; font-size: 13px; font-weight: 700; padding: 9px 16px; border-radius: 10px; min-height: 40px; }
-  .btn-random svg { width: 14px; height: 14px; }
-  .cat-item { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 12px; }
-  .cat-head { display: flex; align-items: center; gap: 10px; padding: 13px 15px; cursor: pointer; }
-  .cat-head h3 { font-size: 15px; font-weight: 700; flex: 1; }
-  .cat-count { font-size: 12px; color: var(--text2); background: var(--bg); border-radius: 999px; padding: 3px 10px; flex: none; }
-  .cat-body { display: none; border-top: 1px dashed var(--line); padding: 6px 15px 14px; }
-  .cat-item.open .cat-body { display: block; }
-  .cat-item.open .iq-chev { transform: rotate(180deg); }
-  .bq-item { border-bottom: 1px dashed var(--line); }
-  .bq-item:last-child { border-bottom: none; }
-  .bq-head { display: flex; align-items: flex-start; gap: 10px; padding: 12px 2px; cursor: pointer; }
-  .bq-idx { flex: none; width: 24px; height: 24px; border-radius: 8px; background: var(--primary-soft); color: var(--primary); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
-  .bq-q { flex: 1; font-size: 14px; font-weight: 600; line-height: 1.55; }
-  .bq-tags { display: flex; gap: 5px; margin-top: 6px; flex-wrap: wrap; }
-  .bq-tag { font-size: 10px; padding: 2px 8px; border-radius: 999px; background: var(--bg); color: var(--text2); }
-  .bq-tag.hot { background: var(--red-soft); color: var(--red); font-weight: 700; }
-  .bq-reveal { font-size: 12px; color: var(--primary); font-weight: 600; flex: none; margin-top: 4px; }
-  .bq-ans { display: none; background: var(--primary-soft); border-radius: 10px; padding: 12px 14px; margin: 0 0 12px 34px; }
-  .bq-item.open .bq-ans { display: block; }
-  .bq-item.open .bq-reveal { color: var(--text3); }
-
-  /* ===== 中间件题库 ===== */
-  #tab-bank { padding-top: 16px; }
-  .bank-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
-  .bk-mod { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; break-inside: avoid; }
-  .bk-mod-head { display: flex; align-items: center; gap: 10px; padding: 13px 14px; cursor: pointer; transition: background .15s; }
-  .bk-mod-head:hover { background: var(--bg); }
-  .bk-mod-icon { flex: none; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; color: #fff; }
-  .bk-mod-info { flex: 1; min-width: 0; }
-  .bk-mod-name { font-size: 15px; font-weight: 700; line-height: 1.3; }
-  .bk-mod-desc { font-size: 12px; color: var(--text2); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .bk-mod-side { flex: none; text-align: right; }
-  .bk-mod-count { font-size: 12px; color: var(--text2); }
-  .bk-mod-count b { color: var(--primary); font-size: 15px; }
-  .bk-mod-chev { color: var(--text3); transition: transform .2s; }
-  .bk-mod.open .bk-mod-chev { transform: rotate(180deg); }
-  .bk-mod-body { display: none; border-top: 1px solid var(--line); padding: 6px 12px 10px; }
-  .bk-mod.open .bk-mod-body { display: block; }
-  .bk-topic { display: flex; align-items: center; gap: 8px; padding: 9px 6px; border-radius: 8px; cursor: pointer; transition: background .12s; }
-  .bk-topic:hover { background: var(--primary-soft); }
-  .bk-topic-idx { flex: none; font-size: 11px; color: var(--text3); width: 16px; text-align: right; }
-  .bk-topic-info { flex: 1; min-width: 0; }
-  .bk-topic-name { font-size: 13.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .bk-topic-desc { font-size: 12px; color: var(--text2); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .bk-topic-link { flex: none; font-size: 12px; color: var(--primary); font-weight: 600; white-space: nowrap; }
-  .bank-summary { font-size: 13px; color: var(--text2); background: var(--card); padding: 12px 14px; border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 14px; }
-  .bank-summary b { color: var(--primary); }
-
-  /* ===== 统计 ===== */
-  #tab-stats { padding-top: 16px; }
-  .stats-wrap { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
-  .stat-card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px; }
-  .stat-num { font-size: 26px; font-weight: 800; line-height: 1.2; }
-  .stat-num small { font-size: 13px; font-weight: 600; color: var(--text3); }
-  .stat-label { font-size: 12px; color: var(--text2); margin-top: 3px; display: flex; align-items: center; gap: 5px; }
-  .stat-label svg { width: 13px; height: 13px; color: var(--text3); }
-  .stat-card.blue .stat-num { color: var(--primary); }
-  .stat-card.green .stat-num { color: var(--green); }
-  .stat-card.red .stat-num { color: var(--red); }
-  .stat-card.violet .stat-num { color: var(--violet); }
-  .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .chart-card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; }
-  .chart-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 7px; }
-  .chart-card h3 svg { width: 15px; height: 15px; color: var(--primary); }
-  .ring-wrap { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
-  .legend { flex: 1; min-width: 120px; display: flex; flex-direction: column; gap: 8px; }
-  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text2); }
-  .legend-dot { width: 10px; height: 10px; border-radius: 3px; flex: none; }
-  .legend-item b { margin-left: auto; color: var(--text); font-weight: 700; }
-  .bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-  .bar-label { width: 86px; flex: none; font-size: 12px; color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right; }
-  .bar-track { flex: 1; height: 18px; background: var(--bg); border-radius: 9px; overflow: hidden; }
-  .bar-fill { height: 100%; border-radius: 9px; min-width: 2px; }
-  .bar-val { width: 34px; flex: none; font-size: 12px; font-weight: 700; color: var(--text); text-align: right; }
-
-  /* ===== 弹窗 ===== */
-  .mask { position: fixed; inset: 0; background: rgba(15,23,42,.45); z-index: 60; display: flex; align-items: flex-end; justify-content: center; }
-  .mask.center { align-items: center; padding: 16px; }
-  .modal { background: var(--card); width: 100%; max-width: 560px; max-height: 88vh; overflow-y: auto; border-radius: 18px 18px 0 0; animation: slideUp .22s ease; }
-  .mask.center .modal { border-radius: 18px; max-height: 82vh; animation: pop .18s ease; }
-  @keyframes slideUp { from { transform: translateY(40px); opacity: .6; } to { transform: none; opacity: 1; } }
-  @keyframes pop { from { transform: scale(.95); opacity: .6; } to { transform: none; opacity: 1; } }
-  .modal-head { display: flex; align-items: center; gap: 10px; padding: 16px 18px 12px; }
-  .modal-head h3 { font-size: 16px; font-weight: 700; flex: 1; }
-  .m-close { width: 34px; height: 34px; border-radius: 10px; background: var(--bg); display: flex; align-items: center; justify-content: center; color: var(--text2); }
-  .m-close svg { width: 16px; height: 16px; }
-  .modal-body { padding: 0 18px 18px; }
-  .form-row { margin-bottom: 12px; }
-  .form-row label { display: block; font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 6px; }
-  .form-row label i { color: var(--red); font-style: normal; }
-  .form-row input[type="text"], .form-row select, .form-row textarea, .form-row input[type="date"] {
-    width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: #fff; min-height: 44px;
-  }
-  .form-row textarea { min-height: 140px; resize: vertical; line-height: 1.55; }
-  .form-hint { font-size: 12px; color: var(--text3); margin-top: 4px; }
-  .chk-group { display: flex; flex-wrap: wrap; gap: 8px; }
-  .chk-item { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 999px; padding: 7px 13px; font-size: 13px; color: var(--text2); cursor: pointer; min-height: 40px; user-select: none; }
-  .chk-item.on { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); font-weight: 600; }
-  .chk-item input { display: none; }
-  .btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: var(--primary); color: #fff; font-size: 14px; font-weight: 700; border-radius: 10px; padding: 11px 18px; min-height: 44px; width: 100%; }
-  .btn-primary:disabled { opacity: .6; cursor: not-allowed; }
-  .btn-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--line); background: var(--card); color: var(--text2); font-size: 13px; font-weight: 600; border-radius: 10px; padding: 9px 14px; min-height: 40px; }
-  .btn-danger { display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: var(--red); color: #fff; font-size: 13px; font-weight: 700; border-radius: 10px; padding: 9px 14px; min-height: 40px; }
-  .btn-dialog { display: inline-flex; align-items: center; justify-content: center; background: var(--primary); color: #fff; font-size: 14px; font-weight: 700; border-radius: 10px; padding: 11px 22px; min-height: 44px; flex: 1; }
-  .btn-dialog.gray { background: var(--bg); color: var(--text2); }
-  .btn-dialog.red { background: var(--red); }
-
-  /* ===== 详情 ===== */
-  .detail-stack { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-  .detail-markdown { font-size: 14px; line-height: 1.75; color: #1e293b; }
-  .detail-markdown h3, .detail-markdown h4 { margin: 12px 0 6px; font-weight: 700; color: var(--text); }
-  .detail-markdown h3 { font-size: 15px; }
-  .detail-markdown h4 { font-size: 14px; }
-  .detail-markdown p { margin: 6px 0; }
-  .detail-markdown ul { margin: 6px 0 6px 20px; }
-  .detail-markdown li { margin: 3px 0; }
-  .detail-markdown pre { background: #0f172a; color: #e2e8f0; border-radius: 10px; padding: 12px 14px; overflow-x: auto; font-size: 12.5px; line-height: 1.6; margin: 8px 0; font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; white-space: pre; }
-  .detail-markdown code { font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; }
-  .detail-markdown strong { font-weight: 700; color: var(--text); }
-  .detail-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
-
-  /* ===== FAB / 底部栏 ===== */
-  .fab { position: fixed; right: 16px; bottom: 84px; width: 52px; height: 52px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 20px rgba(37,99,235,.4); z-index: 50; transition: transform .15s; }
-  .fab:active { transform: scale(.92); }
-  .fab svg { width: 22px; height: 22px; }
-  .bottom-nav { position: fixed; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,.96); backdrop-filter: blur(10px); border-top: 1px solid var(--line); display: flex; z-index: 55; padding-bottom: env(safe-area-inset-bottom); }
-  .bn-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 9px 4px 7px; font-size: 11px; color: var(--text3); min-height: 56px; }
-  .bn-item svg { width: 20px; height: 20px; }
-  .bn-item.on { color: var(--primary); font-weight: 700; }
-
-  /* ===== Toast ===== */
-  .toast { position: fixed; left: 50%; bottom: 92px; transform: translateX(-50%) translateY(10px); background: rgba(15,23,42,.9); color: #fff; font-size: 13px; padding: 10px 18px; border-radius: 999px; z-index: 99; opacity: 0; transition: all .25s; pointer-events: none; max-width: 86vw; text-align: center; }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-  /* ===== 今日打卡可点击 ===== */
-  .t-item.clickable { cursor: pointer; transition: background .12s; border-radius: 8px; }
-  .t-item.clickable:hover { background: var(--primary-soft); }
-  .t-item.clickable:active { background: var(--primary-soft); transform: scale(.997); }
-
-  /* ===== 响应式 ===== */
-  @media (max-width: 767px) {
-    body { padding-bottom: 84px; font-size: 14px; }
-    .wrap { padding: 0 12px; }
-    /* Header */
-    .hd-inner { padding: 12px 12px; gap: 10px; }
-    .hd-logo { width: 36px; height: 36px; border-radius: 10px; }
-    .hd-logo svg { width: 20px; height: 20px; }
-    .hd-title { font-size: 16px; }
-    .hd-sub { display: none; }
-    .hd-right { gap: 6px; }
-    .hd-btn { padding: 8px 10px; min-height: 40px; }
-    .hd-btn span.t { display: none; }
-    .hd-btn svg { width: 16px; height: 16px; }
-    .sync-pill { padding: 4px 10px; font-size: 11px; }
-    /* 备份提示 */
-    .backup-tip { margin: 10px 0 0; padding: 8px 12px; font-size: 12px; gap: 6px; }
-    .backup-tip svg { width: 14px; height: 14px; }
-    /* 今日复习 */
-    .today-card { margin-top: 10px; }
-    .today-head { padding: 13px 14px; gap: 8px; flex-wrap: wrap; }
-    .today-head h2 { font-size: 15px; }
-    .today-stats { gap: 4px; }
-    .stat-chip { font-size: 11px; padding: 2px 8px; }
-    .today-body { padding: 6px 14px 12px; }
-    .t-item { padding: 11px 4px; gap: 8px; }
-    .t-item.clickable:hover { background: transparent; }
-    .t-item.clickable:active { background: var(--primary-soft); }
-    .t-name { font-size: 13.5px; }
-    .t-meta { font-size: 11.5px; }
-    .btn-done { padding: 7px 12px; font-size: 12px; min-height: 38px; }
-    .btn-done svg { width: 13px; height: 13px; }
-    /* 筛选 */
-    .filter-bar { gap: 6px; margin: 10px 0; }
-    .search-box { min-width: 0; flex: 1 1 100%; }
-    .search-box input { padding: 10px 10px 10px 32px; font-size: 15px; min-height: 42px; }
-    .search-box svg { left: 10px; width: 14px; height: 14px; }
-    .chip { padding: 6px 11px; font-size: 12px; min-height: 34px; }
-    /* 知识卡片网格 */
-    .k-grid { grid-template-columns: 1fr; gap: 10px; }
-    .k-card { padding: 12px 12px 10px; }
-    .k-name { font-size: 14px; -webkit-line-clamp: 3; }
-    .k-top { gap: 6px; flex-wrap: wrap; }
-    .k-stack, .k-ov, .k-type { font-size: 10.5px; padding: 2px 8px; }
-    .k-foot { font-size: 11px; margin-top: 8px; padding-top: 8px; gap: 5px; }
-    .k-level { font-size: 11px; padding: 2px 8px; }
-    /* 面试专题 */
-    .subtabs { gap: 6px; margin: 12px 0 4px; }
-    .subtab { padding: 7px 13px; font-size: 12.5px; min-height: 36px; }
-    .bank-tool { gap: 6px; margin: 8px 0 10px; }
-    .btn-random { padding: 8px 13px; font-size: 12.5px; min-height: 38px; }
-    .cat-head { padding: 12px 13px; }
-    .cat-head h3 { font-size: 14px; }
-    .cat-count { font-size: 11px; padding: 2px 8px; }
-    .cat-body { padding: 6px 13px 12px; }
-    .bq-head { padding: 11px 2px; gap: 8px; }
-    .bq-idx { width: 22px; height: 22px; font-size: 10.5px; }
-    .bq-q { font-size: 13.5px; }
-    .bq-tag { font-size: 10px; padding: 2px 7px; }
-    .bq-reveal { font-size: 11.5px; }
-    .bq-ans { padding: 10px 11px; margin: 0 0 10px 30px; }
-    .iq-head { padding: 12px 13px; gap: 8px; }
-    .iq-q { font-size: 13.5px; }
-    .iq-stack { font-size: 10.5px; padding: 2px 7px; }
-    .iq-body { padding: 11px 13px 13px; }
-    /* 统计 */
-    .stats-wrap { grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 10px; }
-    .chart-grid { grid-template-columns: 1fr; gap: 10px; }
-    .stat-card { padding: 12px; }
-    .stat-num { font-size: 22px; }
-    .stat-num small { font-size: 12px; }
-    .stat-label { font-size: 11px; }
-    .chart-card { padding: 13px; }
-    .chart-card h3 { font-size: 13px; margin-bottom: 10px; }
-    .chart-card h3 svg { width: 14px; height: 14px; }
-    .ring-wrap { gap: 12px; justify-content: center; }
-    .ring-wrap svg { width: 130px; height: 130px; }
-    .legend { min-width: 0; flex-basis: 100%; flex-direction: row; flex-wrap: wrap; gap: 6px 14px; }
-    .legend-item { font-size: 11px; }
-    .bar-label { width: 60px; font-size: 11px; }
-    .bar-val { width: 28px; font-size: 11px; }
-    .bar-track { height: 16px; }
-    /* 结构图 */
-    .detail-diagram { padding: 8px 10px; margin: 2px 0 10px; }
-    .detail-diagram .dg-cap { font-size: 10.5px; margin-bottom: 4px; }
-    .detail-diagram svg { max-height: 260px; }
-    /* 详情 */
-    .detail-markdown { font-size: 13.5px; line-height: 1.7; }
-    .detail-markdown h3 { font-size: 14px; }
-    .detail-markdown h4 { font-size: 13.5px; }
-    .detail-markdown pre { font-size: 11.5px; padding: 10px 12px; }
-    .detail-actions { gap: 8px; }
-    .detail-actions .btn-done { width: 100%; min-height: 42px; font-size: 13px; }
-    /* 弹窗：移动端全屏从底部滑入 */
-    .mask { align-items: flex-end; padding: 0; }
-    .mask.center { align-items: flex-end; padding: 0; }
-    .modal { max-width: 100%; border-radius: 14px 14px 0 0; max-height: 92vh; animation: slideUp .22s ease; }
-    .mask.center .modal { border-radius: 14px 14px 0 0; max-height: 92vh; animation: slideUp .22s ease; }
-    .modal-head { padding: 15px 16px 10px; }
-    .modal-head h3 { font-size: 15px; }
-    .modal-body { padding: 0 16px 20px; }
-    /* Toast */
-    .toast { bottom: 96px; font-size: 12px; padding: 8px 14px; max-width: 90vw; }
-    /* 隐藏 PC Tab（用底部导航替代） */
-    .tabs { display: none; }
-  }
-  @media (min-width: 768px) {
-    .bottom-nav { display: none; }
-    .mask { align-items: center; padding: 16px; }
-    .modal { border-radius: 18px; max-height: 84vh; }
-  }
-  /* 超窄屏（≤380px）进一步压缩 */
-  @media (max-width: 380px) {
-    .hd-title { font-size: 14.5px; }
-    .hd-logo { width: 32px; height: 32px; }
-    .stat-chip { font-size: 10.5px; padding: 2px 6px; }
-    .k-name { font-size: 13.5px; }
-    .bar-label { width: 52px; }
-    .ring-wrap svg { width: 116px; height: 116px; }
-  }
-</style>
+<title>知识卡片库 · zhongwang 的大数据宝典</title>
+<!-- 卡片库首页：今日待复习 + 搜索筛选 + 知识卡片网格；点击卡片进入 card.html 详情子页 -->
+<link rel="stylesheet" href="assets/app.css">
 </head>
 <body>
 
@@ -411,7 +22,7 @@
     </div>
     <div class="hd-right">
       <span class="sync-pill"><span class="sync-dot" id="syncDot"></span><span id="syncText">加载中</span></span>
-      <button class="hd-btn" onclick="exportJSON()">
+      <button class="hd-btn" onclick="BD.exportJSON(ROWS)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
         <span class="t">导出备份</span>
       </button>
@@ -425,366 +36,118 @@
     <span>知识库已积累 <b id="backupCount">30</b> 条，且复习进度仅保存在本机浏览器，建议点击右上角「导出备份」保存 JSON 快照。</span>
   </div>
 
-  <!-- Tab -->
-  <div class="tabs">
-    <button class="tab on" data-tab="library" onclick="switchTab('library')">
+  <!-- 顶部页面导航（PC） -->
+  <nav class="tabs">
+    <a class="tab on" href="index.html">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
       知识卡片库<span class="tab-count" id="cntAll">0</span>
-    </button>
-    <button class="tab" data-tab="interview" onclick="switchTab('interview')">
+    </a>
+    <a class="tab" href="interview.html">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-      面试专题<span class="tab-count" id="cntIq">0</span>
-    </button>
-    <button class="tab" data-tab="stats" onclick="switchTab('stats')">
+      面试专题
+    </a>
+    <a class="tab" href="stats.html">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
       学习统计
-    </button>
-    <button class="tab" data-tab="algo" onclick="switchTab('algo')">
+    </a>
+    <a class="tab" href="algo.html">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 20H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10"></path><path d="M10 20v-6h6v6"></path><path d="M22 22l-5-5"></path><circle cx="17.5" cy="17.5" r="3.5"></circle></svg>
-      算法刷题<span class="tab-count" id="cntAlgo">0</span>
-    </button>
-    <button class="tab" data-tab="bank" onclick="switchTab('bank')">
+      算法刷题
+    </a>
+    <a class="tab" href="bank.html">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-      中间件题库<span class="tab-count" id="cntBank">0</span>
-    </button>
+      中间件题库
+    </a>
+  </nav>
+
+  <!-- 今天要处理 -->
+  <div class="today-card">
+    <div class="today-head" onclick="toggleToday()">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        今天要处理
+      </h2>
+      <div class="today-stats">
+        <span class="stat-chip due" id="statDue">逾期 0</span>
+        <span class="stat-chip today" id="statToday">今日 0</span>
+        <span class="stat-chip" id="statSoon">近3天 0</span>
+      </div>
+    </div>
+    <div class="today-body" id="todayBody"></div>
   </div>
 
-  <!-- 知识卡片库 -->
-  <section id="tab-library">
-    <!-- 今天要处理（仅卡片库页显示） -->
-    <div class="today-card">
-      <div class="today-head" onclick="toggleToday()">
-        <h2>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-          今天要处理
-        </h2>
-        <div class="today-stats">
-          <span class="stat-chip due" id="statDue">逾期 0</span>
-          <span class="stat-chip today" id="statToday">今日 0</span>
-          <span class="stat-chip" id="statSoon">近3天 0</span>
-        </div>
-      </div>
-      <div class="today-body" id="todayBody"></div>
+  <!-- 搜索 + 筛选 -->
+  <div class="filter-bar">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input type="text" id="searchInput" placeholder="搜索知识点（如：Kafka、Shuffle、Checkpoint）" oninput="onSearch()">
     </div>
-    <div class="filter-bar">
-      <div class="search-box">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-        <input type="text" id="searchInput" placeholder="搜索知识点（如：Kafka、Shuffle、Checkpoint）" oninput="onSearch()">
-      </div>
-    </div>
-    <div class="filter-bar">
-      <button class="chip on" data-stack="" onclick="setStackFilter('')">全部</button>
-      <span id="stackChips"></span>
-    </div>
-    <div class="filter-bar">
-      <button class="chip on" data-type="" onclick="setTypeFilter('')">全部类型</button>
-      <span id="typeChips"></span>
-    </div>
-    <div class="k-grid" id="libraryGrid"></div>
-    <div id="libraryEmpty"></div>
-  </section>
+  </div>
+  <div class="filter-bar">
+    <button class="chip on" data-stack="" onclick="setStackFilter('')">全部</button>
+    <span id="stackChips"></span>
+  </div>
+  <div class="filter-bar">
+    <button class="chip on" data-type="" onclick="setTypeFilter('')">全部类型</button>
+    <span id="typeChips"></span>
+  </div>
 
-  <!-- 面试专题 -->
-  <section id="tab-interview" class="hidden">
-    <div class="subtabs">
-      <button class="subtab on" id="subBank" onclick="switchIvView('bank')">📚 专项题库</button>
-      <button class="subtab" id="subMine" onclick="switchIvView('mine')">🗂 我的面试题卡片</button>
-    </div>
-    <div id="ivBank">
-      <div class="bank-tool">
-        <button class="btn-random" onclick="randomQuestion()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
-          随机一题（模拟面试）
-        </button>
-        <span class="bank-meta" id="bankMeta">题库加载中…</span>
-      </div>
-      <div id="bankList"></div>
-    </div>
-    <div id="ivMine" class="hidden">
-      <div class="iq-list" id="iqList"></div>
-      <div id="iqEmpty"></div>
-    </div>
-  </section>
-
-  <!-- 学习统计 -->
-  <section id="tab-stats" class="hidden">
-    <div class="stats-wrap">
-      <div class="stat-card blue"><div class="stat-num" id="stTotal">0</div><div class="stat-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>知识卡片总数</div></div>
-      <div class="stat-card green"><div class="stat-num" id="stMastered">0</div><div class="stat-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>已掌握</div></div>
-      <div class="stat-card red"><div class="stat-num" id="stDue">0</div><div class="stat-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>待复习（逾期+今日）</div></div>
-      <div class="stat-card violet"><div class="stat-num" id="stReviews">0</div><div class="stat-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>累计复习次数</div></div>
-    </div>
-    <div class="chart-grid">
-      <div class="chart-card">
-        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>掌握度分布</h3>
-        <div class="ring-wrap">
-          <svg id="ringSvg" viewBox="0 0 140 140" width="150" height="150" role="img" aria-label="掌握度分布环形图"></svg>
-          <div class="legend" id="levelLegend"></div>
-        </div>
-      </div>
-      <div class="chart-card">
-        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>技术栈分布（Top 8）</h3>
-        <div id="stackBars"></div>
-      </div>
-      <div class="chart-card" style="grid-column: 1 / -1;">
-        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>知识类型分布</h3>
-        <div id="typeBars"></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 算法刷题 -->
-  <section id="tab-algo" class="hidden">
-    <div class="algo-intro" style="margin:14px 0 10px; font-size:13px; color:var(--text2); background:var(--card); padding:12px 14px; border-radius:var(--radius); box-shadow:var(--shadow);">
-      LeetCode Hot 100 高频算法题专区，涵盖数组、链表、二叉树、动态规划、回溯等核心考点。
-    </div>
-    <div class="k-grid" id="algoGrid"></div>
-    <div id="algoEmpty"></div>
-  </section>
-
-  <!-- 中间件题库 -->
-  <section id="tab-bank" class="hidden">
-    <div class="bank-summary">
-      参考面试鸭模式整理的大数据<strong>中间件高频面试考点</strong>：点击任一中间件展开知识点清单，点击知识点直达关联卡片详解。已覆盖 <b id="bankStat">0</b> 个中间件 / <b id="bankTopics">0</b> 个核心知识点。
-    </div>
-    <div class="bank-grid" id="bankGrid"></div>
-  </section>
+  <div class="k-grid" id="libraryGrid"></div>
+  <div id="libraryEmpty"></div>
 </div>
 
 <!-- 底部移动端导航 -->
 <nav class="bottom-nav">
-  <button class="bn-item on" data-tab="library" onclick="switchTab('library')">
+  <a class="bn-item on" href="index.html">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
     卡片库
-  </button>
-  <button class="bn-item" data-tab="interview" onclick="switchTab('interview')">
+  </a>
+  <a class="bn-item" href="interview.html">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
     面试专题
-  </button>
-  <button class="bn-item" data-tab="stats" onclick="switchTab('stats')">
+  </a>
+  <a class="bn-item" href="stats.html">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
     统计
-  </button>
-  <button class="bn-item" data-tab="algo" onclick="switchTab('algo')">
+  </a>
+  <a class="bn-item" href="algo.html">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 20H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10"></path><path d="M10 20v-6h6v6"></path><path d="M22 22l-5-5"></path><circle cx="17.5" cy="17.5" r="3.5"></circle></svg>
     算法
-  </button>
-  <button class="bn-item" data-tab="bank" onclick="switchTab('bank')">
+  </a>
+  <a class="bn-item" href="bank.html">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
     题库
-  </button>
+  </a>
 </nav>
-
-<!-- FAB 新增按钮已移除：知识点不支持本地编辑 -->
-<!-- 表单弹窗已移除：知识点由 GitHub 仓库统一维护，不支持本地编辑/删除 -->
-<!-- 详情弹窗 -->
-<div class="mask center hidden" id="detailMask" onclick="if(event.target===this)closeDetail()">
-  <div class="modal">
-    <div class="modal-head">
-      <h3 id="detailTitle">知识详情</h3>
-      <button class="m-close" onclick="closeDetail()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-      </button>
-    </div>
-    <div class="modal-body">
-      <div class="detail-stack" id="detailMeta"></div>
-      <div class="detail-markdown" id="detailContent"></div>
-      <div class="detail-actions" id="detailActions"></div>
-    </div>
-  </div>
-</div>
-
-<!-- 确认弹窗已移除：知识点不支持删除/清空，无需二次确认 -->
 
 <div class="toast" id="toast"></div>
 
+<script src="assets/app.js"></script>
 <script>
 (function () {
-  var STACKS = ['Hadoop', 'Spark', 'Flink', 'Kafka', 'Hive', 'HBase', 'ClickHouse', 'Doris', '数据湖', '数仓与调度', '其他'];
-  var TYPES = ['原理', '使用方法', '面试题', '架构方案', '核心代码'];
-  var LEVELS = ['待学习', '学习中', '已掌握'];
-  var INTERVALS = [1, 3, 7, 15, 30]; // 艾宾浩斯复习间隔（天）
-  var LS_PROGRESS = 'bdh_progress_v1';   // 对云端卡片的本地覆盖（复习进度/编辑）
-  var LS_CUSTOM = 'bdh_custom_v1';       // 本地新增卡片
-  var LS_DELETED = 'bdh_deleted_v1';     // 本地删除的云端卡片 id
-  var LS_FORM = 'bdh_form_v1';           // 表单草稿
-  var LS_DATA_CACHE = 'bdh_data_cache_v1'; // data.json 离线缓存
-  var LS_IV_CACHE = 'bdh_iv_cache_v1';   // interview.json 离线缓存
-  var STATE = { rows: [], baseLoaded: false, stackFilter: '', typeFilter: '', keyword: '', editingId: '', todayOpen: true, tab: 'library', ivView: 'bank', ivBank: null };
-  var CONFIRM_CB = null;
+  var $ = BD.$, esc = BD.esc, toast = BD.toast;
+  var ROWS = [];
+  window.ROWS = ROWS; // 供导出按钮使用
+  var STATE = { stackFilter: '', typeFilter: '', keyword: '', todayOpen: true };
 
-  /* ---------- 工具 ---------- */
-  function pad(n) { return n < 10 ? '0' + n : '' + n; }
-  function todayStr() { var d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
-  function addDays(dateStr, n) {
-    var p = dateStr.split('-'); var d = new Date(+p[0], +p[1] - 1, +p[2]); d.setDate(d.getDate() + n);
-    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
-  }
-  function daysUntil(dateStr) {
-    if (!dateStr) return 9999;
-    var p = dateStr.split('-'); var d = new Date(+p[0], +p[1] - 1, +p[2]);
-    var t = new Date(); t.setHours(0, 0, 0, 0);
-    return Math.round((d - t) / 86400000);
-  }
-  function esc(s) {
-    if (s === null || s === undefined) return '';
-    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  }
-  function $(id) { return document.getElementById(id); }
-  function toast(msg) {
-    var t = $('toast'); t.textContent = msg; t.classList.add('show');
-    clearTimeout(t._tm); t._tm = setTimeout(function () { t.classList.remove('show'); }, 2400);
-  }
-  function fmtDate(s) { if (!s) return '未安排'; var p = s.slice(0, 10).split('-'); return (+p[1]) + '月' + (+p[2]) + '日'; }
-  function hasType(row, text) { var arr = row['知识类型'] || []; for (var i = 0; i < arr.length; i++) { if (arr[i] === text) return true; } return false; }
-  function levelClass(level) {
-    if (level === '已掌握') return 'l2';
-    if (level === '学习中') return 'l1';
-    return 'l0';
-  }
-
-  /* ---------- 本地存储 ---------- */
-  function lsGet(key, fallback) {
-    try { var raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; } catch (e) { return fallback; }
-  }
-  function lsSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {} }
-  function lsDel(key) { try { localStorage.removeItem(key); } catch (e) {} }
-  function getProgress() { return lsGet(LS_PROGRESS, {}); }
-  function getCustom() { return lsGet(LS_CUSTOM, []); }
-  function getDeleted() { return lsGet(LS_DELETED, []); }
-
-  /* ---------- 加载数据 ---------- */
   function init() {
     renderStackChips();
     renderTypeChips();
-    loadData();
-  }
-
-  function loadData() {
-    setSync(null);
-    loadBank();
-    var cacheBust = todayStr().replace(/-/g, '');
-    fetch('data.json?t=' + cacheBust, { cache: 'no-cache' }).then(function (res) {
-      if (!res.ok) throw new Error('http ' + res.status);
-      return res.json();
-    }).then(function (list) {
-      lsSet(LS_DATA_CACHE, list);
-      STATE.rows = buildRows(list);
-      STATE.baseLoaded = true;
-      renderAll();
-      setSync(true, STATE.rows.length);
-    }).catch(function () {
-      var cached = lsGet(LS_DATA_CACHE, null);
-      if (cached && cached.length) {
-        STATE.rows = buildRows(cached);
-        STATE.baseLoaded = true;
-        renderAll();
-        setSync(false);
-        toast('云端数据加载失败，已使用本机缓存');
-      } else {
-        STATE.rows = buildRows([]);
-        renderAll();
-        setSync(false);
-        toast('数据加载失败，请刷新重试');
-      }
+    BD.loadRows(function (rows, ok, count) {
+      ROWS.length = 0;
+      rows.forEach(function (r) { ROWS.push(r); });
+      BD.setSync(ok, count);
+      renderToday();
+      renderLibrary();
+      renderBackupTip();
     });
   }
 
-  /* 云端基础卡片 + 本地覆盖/新增 → 有效行 */
-  function buildRows(baseList) {
-    var prog = getProgress();
-    var deleted = getDeleted();
-    var rows = [];
-    (baseList || []).forEach(function (c) {
-      if (deleted.indexOf(c.id) >= 0) return;
-      var row = {
-        _id: c.id, _base: true,
-        '名称': c.name || '未命名',
-        '技术栈': c.stack || '其他',
-        '知识类型': c.types || [],
-        '掌握度': c.level || '待学习',
-        '详细内容': c.content || '',
-        '结构图': c.diagram || '',
-        '复习次数': c.reviewCount || 0,
-        '上次复习': c.lastReview || '',
-        '下次复习': c.nextReview || ''
-      };
-      var ov = prog[c.id];
-      if (ov) { for (var k in ov) { if (ov[k] !== undefined && ov[k] !== null && ov[k] !== '') row[k] = ov[k]; } }
-      rows.push(row);
-    });
-    getCustom().forEach(function (c) {
-      rows.push({
-        _id: c.id, _base: false,
-        '名称': c.name, '技术栈': c.stack, '知识类型': c.types || [],
-        '掌握度': c.level || '待学习', '详细内容': c.content || '',
-        '结构图': c.diagram || '',
-        '复习次数': c.reviewCount || 0, '上次复习': c.lastReview || '', '下次复习': c.nextReview || ''
-      });
-    });
-    return rows;
-  }
-
-  /* ---------- 筛选 chips ---------- */
-  function renderStackChips() {
-    var box = $('stackChips'); box.innerHTML = '';
-    for (var i = 0; i < STACKS.length; i++) {
-      (function (s) {
-        var b = document.createElement('button');
-        b.className = 'chip' + (STATE.stackFilter === s ? ' on' : '');
-        b.textContent = s;
-        b.onclick = function () { setStackFilter(STATE.stackFilter === s ? '' : s); };
-        box.appendChild(b);
-      })(STACKS[i]);
-    }
-  }
-
-  function renderTypeChips() {
-    var box = $('typeChips'); box.innerHTML = '';
-    for (var i = 0; i < TYPES.length; i++) {
-      (function (t) {
-        var b = document.createElement('button');
-        b.className = 'chip' + (STATE.typeFilter === t ? ' on' : '');
-        b.textContent = t;
-        b.onclick = function () { setTypeFilter(STATE.typeFilter === t ? '' : t); };
-        box.appendChild(b);
-      })(TYPES[i]);
-    }
-  }
-
-  function setStackFilter(s) { STATE.stackFilter = s; renderStackChips(); renderLibrary(); }
-  function setTypeFilter(t) { STATE.typeFilter = t; renderTypeChips(); renderLibrary(); }
-  function onSearch() { STATE.keyword = $('searchInput').value.trim(); renderLibrary(); }
-
-  function filteredRows() {
-    var k = STATE.keyword.toLowerCase();
-    return STATE.rows.filter(function (r) {
-      if (STATE.stackFilter && r['技术栈'] !== STATE.stackFilter) return false;
-      if (STATE.typeFilter && !hasType(r, STATE.typeFilter)) return false;
-      if (k) {
-        var hay = ((r['名称'] || '') + ' ' + (r['详细内容'] || '') + ' ' + (r['技术栈'] || '')).toLowerCase();
-        if (hay.indexOf(k) < 0) return false;
-      }
-      return true;
-    });
-  }
-
-  /* ---------- 渲染 ---------- */
-  function renderAll() {
-    renderToday();
-    renderLibrary();
-    renderInterview();
-    renderStats();
-    renderAlgo();
-    renderBankModules();
-    renderBackupTip();
-    if (STATE.tab) switchTab(STATE.tab, true);
-  }
-
+  /* ---------- 今日要处理 ---------- */
   function renderToday() {
     var due = [], tdy = [], soon = [];
-    STATE.rows.forEach(function (r) {
-      var du = daysUntil(r['下次复习']);
+    ROWS.forEach(function (r) {
+      var du = BD.daysUntil(r['下次复习']);
       if (du < 0) { due.push(r); } else if (du === 0) { tdy.push(r); } else if (du <= 3) { soon.push(r); }
     });
     $('statDue').textContent = '逾期 ' + due.length;
@@ -796,34 +159,34 @@
       return;
     }
     body.innerHTML = '';
-    var groups = [{ list: due, cls: 'over', label: '逾期未复习' }, { list: tdy, cls: 'tdy', label: '今天到期' }, { list: soon, cls: 'soon', label: '近3天到期' }];
+    var groups = [{ list: due, cls: 'over' }, { list: tdy, cls: 'tdy' }, { list: soon, cls: 'soon' }];
     for (var g = 0; g < groups.length; g++) {
       var grp = groups[g];
       for (var i = 0; i < grp.list.length; i++) {
-        (function (r, cls, label) {
-          var du = daysUntil(r['下次复习']);
+        (function (r, cls) {
+          var du = BD.daysUntil(r['下次复习']);
           var div = document.createElement('div'); div.className = 't-item clickable';
-          div.title = '点击查看卡片详情';
+          div.title = '点击进入卡片详情';
           var badge = document.createElement('span'); badge.className = 't-badge ' + cls;
           var info = document.createElement('div'); info.className = 't-info';
           var name = document.createElement('div'); name.className = 't-name' + (cls === 'over' ? ' overdue' : '');
           name.textContent = r['名称'] || '未命名';
           var meta = document.createElement('div'); meta.className = 't-meta';
           var metaTxt = (r['技术栈'] || '') + ' · ';
-          if (cls === 'over') { metaTxt += '逾期 ' + (-du) + ' 天'; } else if (cls === 'tdy') { metaTxt += '今天到期'; } else { metaTxt += fmtDate(r['下次复习']) + ' 到期'; }
+          if (cls === 'over') { metaTxt += '逾期 ' + (-du) + ' 天'; } else if (cls === 'tdy') { metaTxt += '今天到期'; } else { metaTxt += BD.fmtDate(r['下次复习']) + ' 到期'; }
           metaTxt += ' · 已复习 ' + (r['复习次数'] || 0) + ' 次 · 点击查看';
           meta.innerHTML = metaTxt;
           var act = document.createElement('div'); act.className = 't-act';
           var btn = document.createElement('button');
           btn.className = 'btn-done' + (cls === 'over' ? ' overdue' : '');
           btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' + (cls === 'over' ? '补复习' : '完成复习');
-          btn.onclick = function (e) { e.stopPropagation(); completeReview(r); };
+          btn.onclick = function (e) { e.stopPropagation(); BD.completeReview(r); renderToday(); renderLibrary(); };
           act.appendChild(btn);
-          div.onclick = function () { openDetail(r); };
+          div.onclick = function () { location.href = BD.cardUrl(r._id); };
           div.appendChild(badge); div.appendChild(info); div.appendChild(act);
           info.appendChild(name); info.appendChild(meta);
           body.appendChild(div);
-        })(grp.list[i], grp.cls, grp.label);
+        })(grp.list[i], grp.cls);
       }
     }
   }
@@ -834,662 +197,101 @@
     body.classList.toggle('hidden', !STATE.todayOpen);
   }
 
+  /* ---------- 筛选 ---------- */
+  function renderStackChips() {
+    var box = $('stackChips'); box.innerHTML = '';
+    BD.STACKS.forEach(function (s) {
+      var b = document.createElement('button');
+      b.className = 'chip' + (STATE.stackFilter === s ? ' on' : '');
+      b.textContent = s;
+      b.onclick = function () { setStackFilter(STATE.stackFilter === s ? '' : s); };
+      box.appendChild(b);
+    });
+    var allBtn = document.querySelector('.chip[data-stack]');
+    allBtn.classList.toggle('on', !STATE.stackFilter);
+  }
+
+  function renderTypeChips() {
+    var box = $('typeChips'); box.innerHTML = '';
+    BD.TYPES.forEach(function (t) {
+      var b = document.createElement('button');
+      b.className = 'chip' + (STATE.typeFilter === t ? ' on' : '');
+      b.textContent = t;
+      b.onclick = function () { setTypeFilter(STATE.typeFilter === t ? '' : t); };
+      box.appendChild(b);
+    });
+    var allBtn = document.querySelector('.chip[data-type]');
+    allBtn.classList.toggle('on', !STATE.typeFilter);
+  }
+
+  function setStackFilter(s) { STATE.stackFilter = s; renderStackChips(); renderLibrary(); }
+  function setTypeFilter(t) { STATE.typeFilter = t; renderTypeChips(); renderLibrary(); }
+  function onSearch() { STATE.keyword = $('searchInput').value.trim(); renderLibrary(); }
+
+  function filteredRows() {
+    var k = STATE.keyword.toLowerCase();
+    return ROWS.filter(function (r) {
+      if (STATE.stackFilter && r['技术栈'] !== STATE.stackFilter) return false;
+      if (STATE.typeFilter && !BD.hasType(r, STATE.typeFilter)) return false;
+      if (k) {
+        var hay = ((r['名称'] || '') + ' ' + (r['详细内容'] || '') + ' ' + (r['技术栈'] || '')).toLowerCase();
+        if (hay.indexOf(k) < 0) return false;
+      }
+      return true;
+    });
+  }
+
+  /* ---------- 卡片网格 ---------- */
   function renderLibrary() {
     var rows = filteredRows();
-    $('cntAll').textContent = STATE.rows.length;
+    $('cntAll').textContent = ROWS.length;
     var grid = $('libraryGrid'); grid.innerHTML = '';
     var empty = $('libraryEmpty'); empty.innerHTML = '';
     if (!rows.length) {
-      empty.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg><div>暂无匹配的知识卡片<br>点击右下角 + 新增，或调整筛选条件</div></div>';
+      empty.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg><div>暂无匹配的知识卡片<br>请调整筛选条件</div></div>';
       return;
     }
-    rows.forEach(function (r) {
-      var du = daysUntil(r['下次复习']);
-      var card = document.createElement('div');
-      card.className = 'k-card' + (du < 0 ? ' overdue' : '');
-      var stack = r['技术栈'] || '';
-      var types = r['知识类型'] || [];
-      var html = '';
-      html += '<div class="k-top">';
-      if (stack) html += '<span class="k-stack">' + esc(stack) + '</span>';
-      if (du < 0) html += '<span class="k-ov">逾期 ' + (-du) + ' 天</span>';
-      if (!r._base) html += '<span class="k-type" style="background:var(--amber-soft);color:#b45309">本地</span>';
-      html += '</div>';
-      html += '<div class="k-name">' + esc(r['名称'] || '未命名') + '</div>';
-      html += '<div class="k-types">';
-      for (var i = 0; i < types.length; i++) { html += '<span class="k-type">' + esc(types[i]) + '</span>'; }
-      if (r['结构图']) html += '<span class="k-diabadge">📐 图解</span>';
-      html += '</div>';
-      var lv = r['掌握度'] || '待学习';
-      html += '<div class="k-foot">';
-      html += '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>';
-      html += '<span class="k-next' + (du < 0 ? ' due' : '') + '">' + (du < 0 ? '应于 ' + fmtDate(r['下次复习']) + ' 复习' : (du === 0 ? '今天复习' : fmtDate(r['下次复习']) + ' 复习')) + '</span>';
-      html += '<span class="grow"></span>';
-      html += '<span class="k-level ' + levelClass(lv) + '">' + esc(lv) + '</span>';
-      html += '</div>';
-      card.innerHTML = html;
-      card.onclick = function () { openDetail(r); };
-      grid.appendChild(card);
-    });
+    rows.forEach(function (r) { grid.appendChild(cardEl(r)); });
   }
 
-  function renderInterview() {
-    var rows = STATE.rows.filter(function (r) { return hasType(r, '面试题'); });
-    updateIvCount();
-    var list = $('iqList'); list.innerHTML = '';
-    var empty = $('iqEmpty'); empty.innerHTML = '';
-    if (!rows.length) {
-      empty.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg><div>暂无面试题记录<br>新增知识卡片时勾选「面试题」类型即可收录</div></div>';
-      return;
-    }
-    rows.forEach(function (r, idx) {
-      var item = document.createElement('div'); item.className = 'iq-item';
-      var head = document.createElement('div'); head.className = 'iq-head';
-      var idxEl = document.createElement('span'); idxEl.className = 'iq-idx'; idxEl.textContent = (idx + 1);
-      var q = document.createElement('div'); q.className = 'iq-q'; q.textContent = r['名称'];
-      var st = document.createElement('span'); st.className = 'iq-stack'; st.textContent = r['技术栈'] || '未分类';
-      var chev = document.createElement('span'); chev.className = 'iq-chev';
-      chev.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
-      head.appendChild(idxEl); head.appendChild(q); head.appendChild(st); head.appendChild(chev);
-      var body = document.createElement('div'); body.className = 'iq-body';
-      body.innerHTML = (r['结构图'] ? '<div class="detail-diagram"><div class="dg-cap">📐 结构示意</div>' + r['结构图'] + '</div>' : '')
-        + '<div class="detail-markdown">' + renderMarkdown(r['详细内容']) + '</div>';
-      var acts = document.createElement('div'); acts.className = 'iq-actions';
-      var lvBtn = document.createElement('button'); lvBtn.className = 'btn-ghost';
-      lvBtn.innerHTML = '掌握度：' + esc(r['掌握度'] || '待学习');
-      lvBtn.onclick = function () { openDetail(r); };
-      var doneBtn = document.createElement('button'); doneBtn.className = 'btn-done';
-      doneBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>完成复习';
-      doneBtn.onclick = function () { completeReview(r); };
-      acts.appendChild(lvBtn); acts.appendChild(doneBtn);
-      body.appendChild(acts);
-      head.onclick = function () { item.classList.toggle('open'); };
-      item.appendChild(head); item.appendChild(body);
-      list.appendChild(item);
-    });
-  }
-
-  /* ---------- 统计 ---------- */
-  function renderStats() {
-    var rows = STATE.rows;
-    var total = rows.length;
-    var mastered = 0, learning = 0, pending = 0, reviews = 0, dueCount = 0;
-    rows.forEach(function (r) {
-      var lv = r['掌握度'] || '待学习';
-      if (lv === '已掌握') mastered++; else if (lv === '学习中') learning++; else pending++;
-      reviews += (r['复习次数'] || 0);
-      if (daysUntil(r['下次复习']) <= 0) dueCount++;
-    });
-    $('stTotal').textContent = total;
-    $('stMastered').textContent = mastered;
-    $('stDue').textContent = dueCount;
-    $('stReviews').textContent = reviews;
-    renderRing(mastered, learning, pending);
-    renderStackBars(rows);
-    renderTypeBars(rows);
-  }
-
-  function renderAlgo() {
-    var rows = STATE.rows.filter(function (r) { return r['技术栈'] === '算法'; });
-    $('cntAlgo').textContent = rows.length;
-    var grid = $('algoGrid'); grid.innerHTML = '';
-    var empty = $('algoEmpty'); empty.innerHTML = '';
-    if (!rows.length) {
-      empty.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 20H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10"></path><path d="M10 20v-6h6v6"></path><path d="M22 22l-5-5"></path><circle cx="17.5" cy="17.5" r="3.5"></circle></svg><div>暂无算法卡片<br>每日知识补充中…</div></div>';
-      return;
-    }
-    rows.forEach(function (r) {
-      var du = daysUntil(r['下次复习']);
-      var card = document.createElement('div');
-      card.className = 'k-card' + (du < 0 ? ' overdue' : '');
-      var stack = r['技术栈'] || '';
-      var types = r['知识类型'] || [];
-      var html = '';
-      html += '<div class="k-top">';
-      if (stack) html += '<span class="k-stack">' + esc(stack) + '</span>';
-      if (du < 0) html += '<span class="k-ov">逾期 ' + (-du) + ' 天</span>';
-      if (!r._base) html += '<span class="k-type" style="background:var(--amber-soft);color:#b45309">本地</span>';
-      html += '</div>';
-      html += '<div class="k-name">' + esc(r['名称'] || '未命名') + '</div>';
-      html += '<div class="k-types">';
-      for (var i = 0; i < types.length; i++) { html += '<span class="k-type">' + esc(types[i]) + '</span>'; }
-      if (r['结构图']) html += '<span class="k-diabadge">📐 图解</span>';
-      html += '</div>';
-      var lv = r['掌握度'] || '待学习';
-      html += '<div class="k-foot">';
-      html += '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>';
-      html += '<span class="k-next' + (du < 0 ? ' due' : '') + '">' + (du < 0 ? '应于 ' + fmtDate(r['下次复习']) + ' 复习' : (du === 0 ? '今天复习' : fmtDate(r['下次复习']) + ' 复习')) + '</span>';
-      html += '<span class="grow"></span>';
-      html += '<span class="k-level ' + levelClass(lv) + '">' + esc(lv) + '</span>';
-      html += '</div>';
-      card.innerHTML = html;
-      card.onclick = function () { openDetail(r); };
-      grid.appendChild(card);
-    });
-  }
-
-  /* ---------- 中间件题库 ---------- */
-  var BANK_MODULES = [
-    { name: 'Hadoop', icon: 'H', color: '#e97', desc: '分布式存储与计算基石（HDFS/YARN/MapReduce/ZK）', topics: [
-      { t: 'HDFS 架构与读写流程', d: 'NameNode/DataNode 角色分工、读写链路、机架感知', card: '0PpoJou9NYBnUCAICET1pA' },
-      { t: 'HDFS 写入流程与副本放置策略', d: 'Pipeline 写入、副本 2 副本本机架 1 跨机架', card: 'z56UxRmtMyhixEf4bE7ojg' },
-      { t: 'HDFS 小文件问题与治理', d: 'NameNode 内存压力、合并方案 SequenceFile/HAR', card: 'pMBgBkhavewNpF0kuJdUpW' },
-      { t: 'YARN 资源调度器详解', d: 'Capacity/Fair/FIFO 调度器对比、资源抢占', card: 'mVBwsMkTiX8GRzirKU728v' },
-      { t: 'MapReduce 原理与 WordCount 实战', d: 'Map/Reduce/Combiner/Partitioner 全流程', card: 'nls5CQodTObckjnn4qKxud' },
-      { t: 'Hadoop 3.x 新特性', d: '纠删码、NameNode 联邦、多级缓存', card: 'HdUDlRtBKt0UAfwH1Au5X2' },
-      { t: 'ZooKeeper 分布式协调原理', d: 'ZAB 协议、Watcher 机制、分布式锁实现', card: 'ZRC3az5RGDVjPVhb9xBUAa' }
-    ] },
-    { name: 'Spark', icon: 'S', color: '#e2572b', desc: '内存计算引擎（Core/SQL/Streaming）', topics: [
-      { t: 'Spark Core RDD 原理', d: 'RDD 血缘、宽窄依赖、算子分类', card: '5SrKCOwumUOxXMRzRRZSX3' },
-      { t: 'Spark 运行架构与任务调度', d: 'Driver/Executor/Master-Worker、DAG 切分 Stage', card: 'GSu1zZ93ksMbRr26NYi7I0' },
-      { t: 'Spark Shuffle 原理与优化', d: 'Hash/Sort/Bypass 三种机制、参数调优', card: 'qTUMlaeNVnghaExATh5Ax2' },
-      { t: 'Spark SQL 与 Catalyst 优化器', d: '解析/优化/物理计划、RBO/CBO 规则', card: 'iWlapMBbrj9FMnZkJrMzcb' },
-      { t: 'Spark 内存模型与统一内存管理', d: 'Execution/Storage/统一内存动态调整', card: 'spark-memory-model' },
-      { t: 'Spark 数据倾斜治理', d: '加盐/两阶段聚合/广播 Join 方案', card: 'q1zNGaQNWy4dwe9f4NHhf2' },
-      { t: 'Spark 调优实战', d: '并行度、序列化、cache 策略、GC 调优', card: 'e0PrpOINAcQU23iBrXcFPp' },
-      { t: 'Spark Structured Streaming 流处理', d: '微批模型、EventTime、Watermark、状态存储', card: 'spark-structured-streaming' }
-    ] },
-    { name: 'Flink', icon: 'F', color: '#e65100', desc: '流批一体实时计算引擎', topics: [
-      { t: 'Flink 核心概念与架构', d: 'JobManager/TaskManager/Slot、DataStream API', card: 'K5tikDpiEji4U6uxLizX5X' },
-      { t: 'Flink 状态管理与 Checkpoint', d: 'Keyed/Operator State、RocksDB 后端', card: 'CYp6jLShogRp4Hamfzlhcc' },
-      { t: 'Flink Window 机制详解', d: '滚动/滑动/会话窗口、EventTime/ProcessTime', card: 'EwysXZ3hTHBsChtqAVjFck' },
-      { t: 'Flink Checkpoint 与 Exactly-Once', d: 'Barrier 对齐、两阶段提交 Sink', card: 'NVYIgq9NAO8i8shLbKjdv8' },
-      { t: 'Flink 反压机制与性能诊断', d: 'Credit-Based 流控、Web UI 反压指标、治理方案', card: 'flink-backpressure-diagnosis' },
-      { t: 'Flink SQL 实战', d: '动态表、时间属性、Window TVF、Retract 流', card: 'RgkgLxbdp266FQiRyEUbH7' },
-      { t: 'Flink CEP 复杂事件处理实战', d: 'Pattern 定义、超时处理、检测状态机', card: 'flink-cep-complex-event-processing' }
-    ] },
-    { name: 'Kafka', icon: 'K', color: '#23880', desc: '高吞吐分布式消息队列（含 Pulsar/RocketMQ）', topics: [
-      { t: 'Kafka 架构与高吞吐原理', d: 'Topic/Partition、顺序写、零拷贝、批量', card: 'Yspa5py14czJtYM4Ly7nH5' },
-      { t: 'Kafka 消息可靠性三要素', d: 'Producer ACK、Broker 副本、Consumer 提交', card: 'BOCoi4L5ECzyXkUiBN4gX3' },
-      { t: 'Kafka 消费者组与 Rebalance', d: '分区分配策略、Rebalance 触发与避免', card: 'ayscxh4qfZbVqk55Sd5pAG' },
-      { t: 'Kafka ISR 机制与副本同步', d: 'LEO/High Watermark、ISR 收缩与 Leader 选举', card: 'kafka-isr-replica-sync' },
-      { t: 'Kafka Exactly-Once 与幂等', d: '幂等生产者、事务、Read Committed', card: 'lW0AZkmXX5kSlpH69kjXTq' },
-      { t: 'Apache Pulsar 架构与优势', d: '存算分离、BookKeeper、分层存储', card: 'aJYNybLkVHl3CBDpdPIRLb' },
-      { t: 'RocketMQ 核心概念', d: 'NameServer/CommitLog/消息重试与事务', card: 'pP8qQXOqLy4AZGqr6TbGLl' }
-    ] },
-    { name: 'Hive', icon: 'H', color: '#f9a825', desc: '数据仓库 SQL 引擎', topics: [
-      { t: 'Hive 架构与执行流程', d: 'HiveServer2/Metastore/Driver 编译流程', card: 'piINQ89RgP0FmbhWaIUreN' },
-      { t: 'Hive 数据倾斜排查与优化', d: '倾斜定位、GroupBy/SkewJoin 参数、Map Join', card: 'ATbKLZUaMuFnkw6s71b1Wi' },
-      { t: 'Hive 分区与分桶设计实战', d: '静态/动态分区、分桶原理与 Map-Side Join', card: 'hive-partition-bucket-design' },
-      { t: 'Hive SQL 优化实战', d: 'CBO、向量化、并行执行、分区裁剪', card: '6hBG22IXPCib8ZFNZu9QXs' },
-      { t: 'Hive 常用函数速查手册', d: '窗口函数/UDTF/日期与字符串函数', card: 'jTpsaLRkFBmLrBA65HgwTa' }
-    ] },
-    { name: 'HBase', icon: 'H', color: '#556b2f', desc: '分布式列式 NoSQL 数据库', topics: [
-      { t: 'HBase 架构与数据模型', d: 'Region/Store/MemStore、LSM-Tree、读写流程', card: 'EWZvXrH6Pe4O3Eh05vIMaL' },
-      { t: 'HBase RowKey 设计最佳实践', d: '避免热点、散列/反转/加盐策略', card: '3Aq1vJj4D3fps9AhnQe9Id' },
-      { t: 'HBase Compaction 与读写放大', d: 'Minor/Major Compaction、LSM 合并策略', card: 'hbase-compaction-read-write-amplification' }
-    ] },
-    { name: 'ClickHouse', icon: 'C', color: '#ffcc00', desc: 'OLAP 列式分析数据库', topics: [
-      { t: 'ClickHouse 架构与 MergeTree 原理', d: '列存压缩、分区/主键/稀疏索引', card: 'C6B1kfvczWeQOvQDriSGfI' },
-      { t: 'ClickHouse 查询优化实战', d: 'PREWHERE、采样、物化视图、跳数索引', card: 'rqpFoJbVswTeOaS4Kr0JnA' }
-    ] },
-    { name: 'Doris', icon: 'D', color: '#00bcd4', desc: 'MPP 实时分析型数据库', topics: [
-      { t: 'Doris 架构与数据模型', d: 'FE/BE、Duplicate/Agg/Unique 模型', card: 'u1k0Ta3ALHsbcNGK1Ju7i5' },
-      { t: 'Doris 导入导出与查询实战', d: 'Stream Load/Broker Load、分桶与 Colocate', card: 'arRCYopaXKqS1ANilcEFMH' }
-    ] },
-    { name: '数据湖', icon: '湖', color: '#0288d1', desc: 'Iceberg / Hudi / Delta 表格式', topics: [
-      { t: '数据湖 vs 数据仓库', d: 'Schema on Read、ACID 湖仓一体演进', card: 'pUyw6wxE4EyC0gMzFCOD79' },
-      { t: 'Apache Iceberg 架构与核心特性', d: '快照/元数据分层、Hidden Partitioning', card: 'XhjCsCiAIxIcyvEPF0KaKe' },
-      { t: 'Apache Hudi 核心特性', d: 'COW/MOR、增量查询、Timeline', card: 'GiFN4FnElmWN6FoDFLZlSK' },
-      { t: 'Delta Lake 核心概念', d: '事务日志、Optimize/Z-Order', card: 'KYjZ2dBfiEo1BchI6L8v5y' }
-    ] },
-    { name: '数仓与调度', icon: '仓', color: '#7b1fa2', desc: '分层建模 / DolphinScheduler / DataX', topics: [
-      { t: '数仓分层设计规范', d: 'ODS/DWD/DWS/ADS 分层职责与命名', card: '76V5C48unio29E6uH0JGTb' },
-      { t: '维度建模：星型模型与雪花模型', d: '事实表/维度表、缓慢变化维 SCD', card: 'pNMDnDrCgWPf9P1KSHoUlL' },
-      { t: '离线数仓架构方案', d: '数据源→ODS→ADS 全链路设计', card: 'Oou9kRrMPSL0SnCgE9lsnd' },
-      { t: '实时数仓架构方案', d: 'Kafka→Flink→OLAP Lambda/Kappa 架构', card: 'e5kogFouivgZTkxXNNwHe4' },
-      { t: '数据同步工具：DataX / SeaTunnel / Sqoop', d: '分片并行、限速、增量同步策略', card: '5mdLv1zDE1TOvwbeJDXBSA' },
-      { t: '调度系统选型：DolphinScheduler / Airflow / Azkaban', d: 'DAG 依赖、补数、告警与容错', card: 'kE6YGg5T1kbag3yN6RslbX' }
-    ] },
-    { name: '检索与查询', icon: 'ES', color: '#e91e63', desc: 'Elasticsearch / Presto / Trino', topics: [
-      { t: 'Elasticsearch 核心原理', d: '倒排索引、分片/副本、Refresh/Translog', card: 'fpM4UPwh17LpvdQJwH3ClZ' },
-      { t: 'Presto/Trino 原理与使用', d: 'Coordinator/Worker、内存计算、Connector', card: 'presto-trino-overview' }
-    ] },
-    { name: '图数据库', icon: '图', color: '#00897b', desc: 'Neo4j / NebulaGraph / JanusGraph / ArangoDB', topics: [
-      { t: 'Neo4j 架构与 Cypher 查询实战', d: '原生图存储、Cypher 模式匹配、Causal 集群', card: 'neo4j-architecture-cypher' },
-      { t: 'NebulaGraph 分布式图数据库原理', d: '存算分离三层架构、nGQL、VID 设计', card: 'nebulagraph-distributed-architecture' },
-      { t: 'JanusGraph 架构与 Gremlin 查询实战', d: '存储/索引分离、复合/混合索引', card: 'janusgraph-architecture-gremlin' },
-      { t: 'ArangoDB 架构与多模型原理', d: '文档/图/KV 三模型一体、Coordinator 集群', card: 'arangodb-multi-model-architecture' },
-      { t: 'ArangoDB AQL 查询与图遍历实战', d: 'FOR/FILTER/RETURN、图遍历与 PRUNE', card: 'arangodb-aql-graph-traversal' }
-    ] },
-    { name: '算法', icon: 'LC', color: '#f57c00', desc: 'LeetCode Hot 100 高频算法题', topics: [
-      { t: '两数之和与哈希表应用', d: '空间换时间、三数之和排序+双指针', card: 'leetcode-two-sum-hash' },
-      { t: '反转链表与链表核心技巧', d: '三指针迭代、快慢指针判环', card: 'leetcode-reverse-linked-list' },
-      { t: '二叉树遍历与递归框架', d: '前中后序、层序 BFS、Morris O(1) 空间', card: 'leetcode-binary-tree-traversal' },
-      { t: '动态规划入门：爬楼梯与 LIS', d: '状态定义与转移方程、滚动数组优化', card: 'leetcode-dp-intro' },
-      { t: '双指针技巧：盛水容器与三数之和', d: '对撞指针、去重技巧', card: 'leetcode-two-pointers' },
-      { t: '链表进阶专题（12题）', d: '合并K个链表、K个一组翻转、回文链表', card: 'leetcode-linked-list-advanced' },
-      { t: '二叉树进阶专题（12题）', d: 'LCA、最大路径和、重建二叉树、前缀和', card: 'leetcode-binary-tree-advanced' },
-      { t: '动态规划进阶专题（15题）', d: '01/完全背包、LCS、编辑距离、树形DP', card: 'leetcode-dp-advanced' },
-      { t: '回溯与DFS专题（14题）', d: '全排列、N皇后、子集去重、单词搜索', card: 'leetcode-backtracking-dfs' },
-      { t: '滑动窗口与字符串专题（14题）', d: '最小覆盖子串、单调栈、KMP、中心扩展', card: 'leetcode-sliding-window-string' },
-      { t: '栈与单调栈专题（10题）', d: '接雨水、柱状图最大矩形、计算器', card: 'leetcode-stack-monotonic' },
-      { t: '贪心算法专题（10题）', d: '跳跃游戏、股票买卖系列、区间贪心', card: 'leetcode-greedy' },
-      { t: '图论BFS与DFS专题（12题）', d: '岛屿数量、拓扑排序、并查集、多源BFS', card: 'leetcode-graph-bfs-dfs' },
-      { t: '排序与二分查找专题（10题）', d: '旋转数组、快速选择、摩尔投票', card: 'leetcode-sort-binary-search' },
-      { t: '高级数据结构专题（10题）', d: 'Trie、LRU/LFU、双堆中位数', card: 'leetcode-advanced-ds' }
-    ] },
-    { name: '基础与综合', icon: '基', color: '#546e7a', desc: 'Linux / Java / 技术选型 / 全景图', topics: [
-      { t: 'Linux 与 Shell 大数据必备技能', d: '常用命令、三剑客 awk/sed/grep、性能排查', card: '1iFECrgZCLOIBBTXTsYfv5' },
-      { t: 'Java 大数据开发必备基础', d: 'JVM 内存模型、GC、集合与并发', card: 'cKujhOXUEN2BzwTdWXQdqN' },
-      { t: '大数据技术全景图', d: '采集→存储→计算→分析→调度全景', card: '1cWXtCG1Pjv238XsHSqCAu' },
-      { t: '大数据学习路线图（由浅入深）', d: '从 Hadoop 入门到实时数仓进阶', card: 'GG5pjLPT82vURw9t1czy1E' },
-      { t: 'Spark vs Flink 对比', d: '流批模型、状态、生态对比选型', card: 'cNJwGk7QLTgVfqzBjCKCDi' },
-      { t: '消息队列选型对比', d: 'Kafka/Pulsar/RocketMQ 横向对比', card: 'GnvAfPqlHVtDPtSn4b4Gu8' },
-      { t: '大数据开源项目全景图谱', d: 'Apache 生态一览与学习优先级', card: 'Mj31pK7BD27NiWeag75YDu' },
-      { t: '开源项目选型指南', d: '社区活跃度、生产验证、人才储备', card: '9HbpZevt96VHhmsW7Kt0eh' }
-    ] }
-  ];
-
-  function renderBankModules() {
-    var grid = $('bankGrid');
-    if (!grid || grid.childElementCount) return;
-    var totalTopics = 0;
-    BANK_MODULES.forEach(function (m) { totalTopics += m.topics.length; });
-    $('cntBank').textContent = BANK_MODULES.length;
-    $('bankStat').textContent = BANK_MODULES.length;
-    $('bankTopics').textContent = totalTopics;
-    BANK_MODULES.forEach(function (m) {
-      var mod = document.createElement('div');
-      mod.className = 'bk-mod';
-      var head = document.createElement('div');
-      head.className = 'bk-mod-head';
-      head.innerHTML = '<div class="bk-mod-icon" style="background:' + m.color + '">' + esc(m.icon) + '</div>'
-        + '<div class="bk-mod-info"><div class="bk-mod-name">' + esc(m.name) + '</div>'
-        + '<div class="bk-mod-desc">' + esc(m.desc) + '</div></div>'
-        + '<div class="bk-mod-side"><div class="bk-mod-count"><b>' + m.topics.length + '</b> 个知识点</div></div>'
-        + '<span class="bk-mod-chev"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>';
-      head.onclick = function () { mod.classList.toggle('open'); };
-      var body = document.createElement('div');
-      body.className = 'bk-mod-body';
-      m.topics.forEach(function (tp, ti) {
-        var it = document.createElement('div');
-        it.className = 'bk-topic';
-        it.innerHTML = '<span class="bk-topic-idx">' + (ti + 1) + '</span>'
-          + '<div class="bk-topic-info"><div class="bk-topic-name">' + esc(tp.t) + '</div>'
-          + (tp.d ? '<div class="bk-topic-desc">' + esc(tp.d) + '</div>' : '') + '</div>'
-          + (tp.card ? '<span class="bk-topic-link">查看卡片 →</span>' : '');
-        it.onclick = function () { if (tp.card) openBankCard(tp.card); };
-        body.appendChild(it);
-      });
-      mod.appendChild(head);
-      mod.appendChild(body);
-      grid.appendChild(mod);
-    });
-  }
-
-  function openBankCard(cardId) {
-    var row = null;
-    for (var i = 0; i < STATE.rows.length; i++) {
-      if (STATE.rows[i]._id === cardId) { row = STATE.rows[i]; break; }
-    }
-    if (row) openDetail(row);
-    else toast('关联卡片尚未加载，请刷新页面后重试');
-  }
-
-  function renderRing(mastered, learning, pending) {
-    var svg = $('ringSvg');
-    var total = mastered + learning + pending;
-    var parts = [
-      { label: '待学习', v: pending, color: '#94a3b8' },
-      { label: '学习中', v: learning, color: '#f59e0b' },
-      { label: '已掌握', v: mastered, color: '#10b981' }
-    ];
-    var R = 52, C = 2 * Math.PI * R, cx = 70, cy = 70;
+  function cardEl(r) {
+    var du = BD.daysUntil(r['下次复习']);
+    var card = document.createElement('div');
+    card.className = 'k-card' + (du < 0 ? ' overdue' : '');
+    var stack = r['技术栈'] || '';
+    var types = r['知识类型'] || [];
     var html = '';
-    var offset = 0;
-    parts.forEach(function (p) {
-      if (p.v <= 0) return;
-      var frac = p.v / total;
-      var dash = frac * C;
-      html += '<circle cx="' + cx + '" cy="' + cy + '" r="' + R + '" fill="none" stroke="' + p.color + '" stroke-width="16" stroke-dasharray="' + dash.toFixed(2) + ' ' + C.toFixed(2) + '" stroke-dashoffset="' + (-offset).toFixed(2) + '" transform="rotate(-90 ' + cx + ' ' + cy + ')"></circle>';
-      offset += dash;
-    });
-    if (!total) {
-      html += '<circle cx="' + cx + '" cy="' + cy + '" r="' + R + '" fill="none" stroke="#e8edf4" stroke-width="16"></circle>';
-    }
-    html += '<text x="' + cx + '" y="' + (cy - 2) + '" text-anchor="middle" font-size="26" font-weight="800" fill="#0f172a">' + total + '</text>';
-    html += '<text x="' + cx + '" y="' + (cy + 20) + '" text-anchor="middle" font-size="11" fill="#94a3b8">知识卡片</text>';
-    svg.innerHTML = html;
-    var leg = $('levelLegend'); leg.innerHTML = '';
-    parts.forEach(function (p) {
-      var item = document.createElement('div'); item.className = 'legend-item';
-      var dot = document.createElement('span'); dot.className = 'legend-dot'; dot.style.background = p.color;
-      var label = document.createElement('span'); label.textContent = p.label;
-      var val = document.createElement('b'); val.textContent = p.v;
-      item.appendChild(dot); item.appendChild(label); item.appendChild(val);
-      leg.appendChild(item);
-    });
-  }
-
-  function renderStackBars(rows) {
-    var map = {};
-    STACKS.forEach(function (s) { map[s] = 0; });
-    rows.forEach(function (r) { var t = r['技术栈'] || '其他'; if (map[t] !== undefined) map[t]++; else map[t] = 1; });
-    var arr = [];
-    for (var k in map) { arr.push({ name: k, v: map[k] }); }
-    arr.sort(function (a, b) { return b.v - a.v; });
-    arr = arr.filter(function (a) { return a.v > 0; }).slice(0, 8);
-    var max = 1;
-    arr.forEach(function (a) { if (a.v > max) max = a.v; });
-    var colors = ['#2563eb', '#0ea5e9', '#8b5cf6', '#f59e0b', '#10b981', '#ef4444', '#14b8a6', '#6366f1'];
-    var box = $('stackBars'); box.innerHTML = '';
-    arr.forEach(function (a, i) {
-      var row = document.createElement('div'); row.className = 'bar-row';
-      var lab = document.createElement('span'); lab.className = 'bar-label'; lab.textContent = a.name; lab.title = a.name;
-      var track = document.createElement('span'); track.className = 'bar-track';
-      var fill = document.createElement('span'); fill.className = 'bar-fill'; fill.style.background = colors[i % colors.length]; fill.style.width = (a.v / max * 100).toFixed(1) + '%';
-      var val = document.createElement('span'); val.className = 'bar-val'; val.textContent = a.v;
-      track.appendChild(fill);
-      row.appendChild(lab); row.appendChild(track); row.appendChild(val);
-      box.appendChild(row);
-    });
-  }
-
-  function renderTypeBars(rows) {
-    var colors = ['#2563eb', '#0ea5e9', '#8b5cf6', '#f59e0b', '#10b981'];
-    var box = $('typeBars'); box.innerHTML = '';
-    var max = 1;
-    var counts = TYPES.map(function (t) { return { name: t, v: 0 }; });
-    rows.forEach(function (r) {
-      var arr = r['知识类型'] || [];
-      counts.forEach(function (c) { if (arr.indexOf(c.name) >= 0) c.v++; });
-    });
-    counts.forEach(function (c) { if (c.v > max) max = c.v; });
-    counts.forEach(function (c, i) {
-      var row = document.createElement('div'); row.className = 'bar-row';
-      var lab = document.createElement('span'); lab.className = 'bar-label'; lab.textContent = c.name;
-      var track = document.createElement('span'); track.className = 'bar-track';
-      var fill = document.createElement('span'); fill.className = 'bar-fill'; fill.style.background = colors[i % colors.length]; fill.style.width = (c.v / max * 100).toFixed(1) + '%';
-      var val = document.createElement('span'); val.className = 'bar-val'; val.textContent = c.v;
-      track.appendChild(fill);
-      row.appendChild(lab); row.appendChild(track); row.appendChild(val);
-      box.appendChild(row);
-    });
+    html += '<div class="k-top">';
+    if (stack) html += '<span class="k-stack">' + esc(stack) + '</span>';
+    if (du < 0) html += '<span class="k-ov">逾期 ' + (-du) + ' 天</span>';
+    html += '</div>';
+    html += '<div class="k-name">' + esc(r['名称'] || '未命名') + '</div>';
+    html += '<div class="k-types">';
+    for (var i = 0; i < types.length; i++) { html += '<span class="k-type">' + esc(types[i]) + '</span>'; }
+    if (r['结构图']) html += '<span class="k-diabadge">📐 图解</span>';
+    html += '</div>';
+    var lv = r['掌握度'] || '待学习';
+    html += '<div class="k-foot">';
+    html += '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>';
+    html += '<span class="k-next' + (du < 0 ? ' due' : '') + '">' + (du < 0 ? '应于 ' + BD.fmtDate(r['下次复习']) + ' 复习' : (du === 0 ? '今天复习' : BD.fmtDate(r['下次复习']) + ' 复习')) + '</span>';
+    html += '<span class="grow"></span>';
+    html += '<span class="k-level ' + BD.levelClass(lv) + '">' + esc(lv) + '</span>';
+    html += '</div>';
+    card.innerHTML = html;
+    card.onclick = function () { location.href = BD.cardUrl(r._id); };
+    return card;
   }
 
   function renderBackupTip() {
-    var n = STATE.rows.length;
+    var n = ROWS.length;
     if (n >= 30) { $('backupCount').textContent = n; $('backupTip').classList.remove('hidden'); }
     else { $('backupTip').classList.add('hidden'); }
   }
 
-  /* ---------- 同步状态 ---------- */
-  function setSync(ok, count) {
-    var dot = $('syncDot'), txt = $('syncText');
-    dot.className = 'sync-dot' + (ok === true ? ' ok' : (ok === false ? ' off' : ''));
-    txt.textContent = ok === true ? ('云端 ' + count + ' 条') : (ok === false ? '缓存模式' : '加载中');
-  }
-
-  /* ---------- 复习动作（写本地覆盖） ---------- */
-  function completeReview(r) {
-    var n = r['复习次数'] || 0;
-    var newN = n + 1;
-    var interval = INTERVALS[Math.min(n, INTERVALS.length - 1)];
-    var nextDate = addDays(todayStr(), interval);
-    var lv = r['掌握度'] || '待学习';
-    var newLevel = lv;
-    if (newN >= 3) { newLevel = '已掌握'; }
-    else if (newN >= 1 && lv === '待学习') { newLevel = '学习中'; }
-    r['复习次数'] = newN; r['上次复习'] = todayStr(); r['下次复习'] = nextDate; r['掌握度'] = newLevel;
-    persistRow(r);
-    renderAll();
-    toast('复习完成！下次复习：' + fmtDate(nextDate) + '（间隔 ' + interval + ' 天）');
-  }
-
-  /* 把当前行状态写入本地 */
-  function persistRow(r) {
-    if (r._base) {
-      var prog = getProgress();
-      prog[r._id] = {
-        '复习次数': r['复习次数'] || 0,
-        '上次复习': r['上次复习'] || '',
-        '下次复习': r['下次复习'] || '',
-        '掌握度': r['掌握度'] || '待学习'
-      };
-      lsSet(LS_PROGRESS, prog);
-    } else {
-      var custom = getCustom();
-      for (var i = 0; i < custom.length; i++) {
-        if (custom[i].id === r._id) {
-          custom[i] = rowToCard(r);
-          lsSet(LS_CUSTOM, custom);
-          return;
-        }
-      }
-    }
-  }
-
-  function rowToCard(r) {
-    return {
-      id: r._id, name: r['名称'], stack: r['技术栈'], types: r['知识类型'] || [],
-      level: r['掌握度'] || '待学习', content: r['详细内容'] || '',
-      diagram: r['结构图'] || '',
-      reviewCount: r['复习次数'] || 0, lastReview: r['上次复习'] || '', nextReview: r['下次复习'] || ''
-    };
-  }
-
-  /* 表单相关函数已移除：知识点由 GitHub 仓库统一维护，不支持本地编辑/删除 */
-
-  /* ---------- 详情 ---------- */
-  var DETAIL_ROW = null;
-  function openDetail(r) {
-    DETAIL_ROW = r;
-    var stack = r['技术栈'];
-    var types = r['知识类型'] || [];
-    var lv = r['掌握度'] || '待学习';
-    var meta = '';
-    if (stack) meta += '<span class="k-stack">' + esc(stack) + '</span>';
-    for (var i = 0; i < types.length; i++) { meta += '<span class="k-type" style="background:var(--primary-soft);color:var(--primary)">' + esc(types[i]) + '</span>'; }
-    meta += '<span class="k-level ' + levelClass(lv) + '">' + esc(lv) + '</span>';
-    $('detailMeta').innerHTML = meta;
-    $('detailTitle').textContent = r['名称'] || '未命名';
-    var contentEl = $('detailContent');
-    var diaHtml = '';
-    if (r['结构图']) {
-      diaHtml = '<div class="detail-diagram"><div class="dg-cap">📐 结构示意（辅助记忆）</div>' + r['结构图'] + '</div>';
-    }
-    contentEl.innerHTML = diaHtml + (renderMarkdown(r['详细内容']) || '<p style="color:var(--text3)">（暂无详细内容，可前往 GitHub 仓库 data.json 补充）</p>');
-    var foot = '';
-    var du = daysUntil(r['下次复习']);
-    foot += '<div style="width:100%;font-size:12px;color:var(--text2);margin-bottom:6px">已复习 ' + (r['复习次数'] || 0) + ' 次 · 上次复习 ' + (r['上次复习'] ? fmtDate(r['上次复习']) : '从未') + ' · 下次 ' + (du < 0 ? '<b style="color:var(--red)">逾期 ' + (-du) + ' 天</b>' : fmtDate(r['下次复习'])) + '</div>';
-    foot += '<button class="btn-done" style="width:100%" onclick="window.__bdComplete && window.__bdComplete()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' + (du < 0 ? '补复习' : '完成复习') + '</button>';
-    $('detailActions').innerHTML = foot;
-    window.__bdComplete = function () { completeReview(r); closeDetail(); };
-    $('detailMask').classList.remove('hidden');
-  }
-  function closeDetail() { $('detailMask').classList.add('hidden'); DETAIL_ROW = null; }
-
-  /* 删除/确认/导入相关函数已移除：知识点不支持本地编辑/删除/导入 */
-
-  /* ---------- 导出 ---------- */
-  function exportJSON() {
-    var payload = { app: 'zhongwang 的大数据宝典', exportedAt: new Date().toISOString(), count: STATE.rows.length, rows: STATE.rows.map(function (r) { return rowToCard(r); }) };
-    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url; a.download = 'zhongwang大数据宝典备份_' + todayStr() + '.json';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    toast('已导出 ' + STATE.rows.length + ' 条备份');
-  }
-
-  /* ---------- 面试专题：题库 ---------- */
-  function loadBank() {
-    var cacheBust = todayStr().replace(/-/g, '');
-    fetch('interview.json?t=' + cacheBust, { cache: 'no-cache' }).then(function (res) {
-      if (!res.ok) throw new Error('http ' + res.status);
-      return res.json();
-    }).then(function (bank) {
-      lsSet(LS_IV_CACHE, bank);
-      STATE.ivBank = bank;
-      renderBank();
-    }).catch(function () {
-      var cached = lsGet(LS_IV_CACHE, null);
-      if (cached && cached.categories) {
-        STATE.ivBank = cached;
-        renderBank();
-      } else {
-        STATE.ivBank = null;
-        var el = $('bankList');
-        if (el) el.innerHTML = '<div class="empty-state"><div>题库加载失败，请刷新重试</div></div>';
-        $('bankMeta').textContent = '';
-      }
-    });
-  }
-
-  function bankTotal(bank) {
-    var n = 0;
-    (bank.categories || []).forEach(function (c) { n += c.questions.length; });
-    return n;
-  }
-
-  function updateIvCount() {
-    var myIq = STATE.rows.filter(function (r) { return hasType(r, '面试题'); }).length;
-    $('cntIq').textContent = (STATE.ivBank ? bankTotal(STATE.ivBank) : 0) + myIq;
-  }
-
-  function renderBank() {
-    var bank = STATE.ivBank;
-    updateIvCount();
-    if (!bank) return;
-    $('bankMeta').textContent = bankTotal(bank) + ' 道高频题 · ' + bank.categories.length + ' 大分类 · 更新于 ' + (bank.updated || '');
-    var list = $('bankList'); list.innerHTML = '';
-    bank.categories.forEach(function (cat, ci) {
-      var item = document.createElement('div'); item.className = 'cat-item' + (ci === 0 ? ' open' : '');
-      var head = document.createElement('div'); head.className = 'cat-head';
-      head.innerHTML = '<h3>' + esc(cat.name) + '</h3><span class="cat-count">' + cat.questions.length + ' 题</span>'
-        + '<span class="iq-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>';
-      head.onclick = function () { item.classList.toggle('open'); };
-      var body = document.createElement('div'); body.className = 'cat-body';
-      cat.questions.forEach(function (q, qi) {
-        var bi = document.createElement('div'); bi.className = 'bq-item';
-        var bh = document.createElement('div'); bh.className = 'bq-head';
-        var tagsHtml = '';
-        (q.tags || []).forEach(function (t) {
-          tagsHtml += '<span class="bq-tag' + (t === '高频' ? ' hot' : '') + '">' + esc(t) + '</span>';
-        });
-        bh.innerHTML = '<span class="bq-idx">' + (qi + 1) + '</span>'
-          + '<div style="flex:1"><div class="bq-q">' + esc(q.q) + '</div>'
-          + (tagsHtml ? '<div class="bq-tags">' + tagsHtml + '</div>' : '') + '</div>'
-          + '<span class="bq-reveal">显示答案 ▾</span>';
-        bh.onclick = function () {
-          bi.classList.toggle('open');
-          var rv = bh.querySelector('.bq-reveal');
-          rv.textContent = bi.classList.contains('open') ? '收起答案 ▴' : '显示答案 ▾';
-        };
-        var ans = document.createElement('div'); ans.className = 'bq-ans detail-markdown';
-        ans.innerHTML = renderMarkdown(q.a);
-        bi.appendChild(bh); bi.appendChild(ans);
-        body.appendChild(bi);
-      });
-      item.appendChild(head); item.appendChild(body);
-      list.appendChild(item);
-    });
-  }
-
-  function switchIvView(v) {
-    STATE.ivView = v;
-    $('subBank').classList.toggle('on', v === 'bank');
-    $('subMine').classList.toggle('on', v === 'mine');
-    $('ivBank').classList.toggle('hidden', v !== 'bank');
-    $('ivMine').classList.toggle('hidden', v !== 'mine');
-  }
-
-  function randomQuestion() {
-    var bank = STATE.ivBank;
-    if (!bank || !bank.categories.length) { toast('题库未加载'); return; }
-    var pool = [];
-    bank.categories.forEach(function (c) {
-      c.questions.forEach(function (q) { pool.push({ cat: c.name, q: q }); });
-    });
-    var pick = pool[Math.floor(Math.random() * pool.length)];
-    switchTab('interview');
-    switchIvView('bank');
-    var list = $('bankList');
-    var items = list.querySelectorAll('.bq-item');
-    var target = null;
-    for (var i = 0; i < items.length; i++) {
-      var qEl = items[i].querySelector('.bq-q');
-      if (qEl && qEl.textContent === pick.q.q) { target = items[i]; break; }
-    }
-    if (target) {
-      var catItem = target.closest ? target.closest('.cat-item') : null;
-      if (catItem) catItem.classList.add('open');
-      target.classList.add('open');
-      var rv = target.querySelector('.bq-reveal');
-      if (rv) rv.textContent = '收起答案 ▴';
-      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-    toast('随机抽到【' + pick.cat + '】先自己作答，再展开对照');
-  }
-
-  /* ---------- Tab ---------- */
-  function switchTab(name, skipScroll) {
-    STATE.tab = name;
-    var tabs = document.querySelectorAll('.tab');
-    for (var i = 0; i < tabs.length; i++) { tabs[i].classList.toggle('on', tabs[i].getAttribute('data-tab') === name); }
-    var bn = document.querySelectorAll('.bn-item');
-    for (var j = 0; j < bn.length; j++) { bn[j].classList.toggle('on', bn[j].getAttribute('data-tab') === name); }
-    var map = { library: 'tab-library', interview: 'tab-interview', stats: 'tab-stats', algo: 'tab-algo', bank: 'tab-bank' };
-    var ids = ['tab-library', 'tab-interview', 'tab-stats', 'tab-algo', 'tab-bank'];
-    for (var k = 0; k < ids.length; k++) { $(ids[k]).classList.toggle('hidden', ids[k] !== map[name]); }
-    if (!skipScroll) { window.scrollTo(0, 0); }
-  }
-
-  /* ---------- Markdown-lite ---------- */
-  function renderMarkdown(text) {
-    if (!text) return '';
-    var out = '';
-    var blocks = String(text).split(/```/);
-    for (var b = 0; b < blocks.length; b++) {
-      if (b % 2 === 1) {
-        out += '<pre><code>' + esc(blocks[b].replace(/^\n/, '').replace(/\n$/, '')) + '</code></pre>';
-      } else {
-        out += renderInlineBlocks(blocks[b]);
-      }
-    }
-    return out;
-  }
-  function renderInlineBlocks(block) {
-    var lines = block.split(/\n/);
-    var out = '';
-    var inList = false;
-    for (var i = 0; i < lines.length; i++) {
-      var ln = lines[i];
-      var t = ln.trim();
-      if (!t) { if (inList) { out += '</ul>'; inList = false; } continue; }
-      var h3 = t.match(/^#{3}\s+(.*)/);
-      var h2 = t.match(/^#{2}\s+(.*)/);
-      var li = t.match(/^[-*]\s+(.*)/);
-      if (h3) { if (inList) { out += '</ul>'; inList = false; } out += '<h4>' + inline(esc(h3[1])) + '</h4>'; }
-      else if (h2) { if (inList) { out += '</ul>'; inList = false; } out += '<h3>' + inline(esc(h2[1])) + '</h3>'; }
-      else if (li) {
-        if (!inList) { out += '<ul>'; inList = true; }
-        out += '<li>' + inline(esc(li[1])) + '</li>';
-      } else {
-        if (inList) { out += '</ul>'; inList = false; }
-        out += '<p>' + inline(esc(t)) + '</p>';
-      }
-    }
-    if (inList) out += '</ul>';
-    return out;
-  }
-  function inline(s) {
-    return s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-  }
-
-  /* ---------- 启动 ---------- */
-  // 将内联 onclick/oninput/onchange 引用的函数暴露到全局作用域
-  window.switchTab = switchTab;
   window.toggleToday = toggleToday;
   window.setStackFilter = setStackFilter;
   window.setTypeFilter = setTypeFilter;
   window.onSearch = onSearch;
-  window.closeDetail = closeDetail;
-  window.exportJSON = exportJSON;
-  window.switchIvView = switchIvView;
-  window.randomQuestion = randomQuestion;
   window.addEventListener('DOMContentLoaded', init);
 })();
 </script>
