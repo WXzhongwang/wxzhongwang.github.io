@@ -1,120 +1,668 @@
 {
-  "updated": "2026-08-28",
-  "description": "大数据开发面试专项题库：分技术栈高频题 + 场景架构题 + 手写 SQL + HR 项目包装。答案默认隐藏，先自测再对照。",
+  "updated": "2026-09-03",
+  "description": "大数据开发面试专项题库：分技术栈高频题（含 Flink CDC 专项）+ 场景架构题 + 手写 SQL + HR 项目包装。答案默认隐藏，先自测再对照。",
   "categories": [
     {
       "name": "Hadoop 生态",
       "questions": [
-        {"q": "HDFS 读文件的完整流程？", "a": "1) Client 向 NameNode 请求读某文件；2) NN 返回该文件 Block 列表及各 Block 所在 DataNode 地址（按与客户端距离排序）；3) Client 直接与最近的 DN 建立 Pipeline 流式读取；4) 校验 checksum，读完后关闭连接。读不经过 NameNode 数据面，NN 只管元数据。", "tags": ["高频", "基础"]},
-        {"q": "HDFS 写文件的完整流程与副本放置策略？", "a": "写入：Client 向 NN 申请写 → NN 检查权限与副本数 → Client 向第一个 DN 建立 Pipeline，数据包边写边流水线复制到第 2、3 个 DN → 全部 ACK 后向 NN 提交。副本放置：第 1 副本放写入方所在节点，第 2 副本放另一机架随机节点，第 3 副本放第 2 副本同机架另一节点——兼顾容灾（机架级故障不丢 2 副本）与带宽（跨机架只走一次）。", "tags": ["高频"]},
-        {"q": "NameNode HA 是怎么实现的？", "a": "双 NameNode（Active/Standby）共享 EditLog（JournalNode 集群，3 节点过半写成功）。Standby 持续拉取 EditLog 回放合并 FSImage，并接收 DN 的块报告保持 BlockMap 最新。故障切换由 ZKFC（ZooKeeper + 心跳）触发自动 failover，切换期间需保证同一时刻只有一个 Active（ fencing 隔离旧主）。", "tags": ["高频"]},
-        {"q": "YARN 上一个 MR 作业的完整调度流程？", "a": "1) Client 向 RM 提交作业，分配 ApplicationMaster；2) AM 向 RM 的 Scheduler 注册并申请 Container 资源；3) RM 把 Container 分配给某 NodeManager，AM 与该 NM 通信启动 task（Container）；4) Task 运行、心跳汇报，AM 监控进度；5) 全部完成后 AM 向 RM 注销并释放资源。", "tags": ["高频"]},
-        {"q": "MapReduce 为什么慢？Spark 为什么快？", "a": "MR 慢在：每个阶段（Map/Reduce）结果都要落盘 HDFS，shuffle 大量磁盘 IO；任务启动是重 JVM 进程，启动开销大；只有 Map 和 Reduce 两个算子表达力差，一个复杂逻辑要串多个 MR 作业。Spark 快在：基于内存 DAG 计算（迭代中间结果不落盘）、线程级 task 复用 Executor 进程、惰性求值统一生成执行计划。", "tags": ["高频", "对比"]},
-        {"q": "小文件问题为什么危害大？怎么治理？", "a": "每个小文件在 NameNode 至少占 150 字节元数据 + 一个 Block 记录，海量小文件撑爆 NN 堆内存；同时 MR/Spark 按文件切分 task，小文件导致 task 过多、启动开销远超计算。治理：入湖前合并（Avro/ORC SequenceFile 打包）、Spark repartition(1) 重写、HAR 归档、定期离线合并任务；源头控制（Kafka 消费端攒批写、压缩按天分区）。", "tags": ["场景"]},
-        {"q": "Shuffle 阶段具体发生了什么？", "a": "Map 端：输出先进环形缓冲区（默认 100MB，80% 溢写）→ 按分区+key 排序（可 Combiner）溢写小文件 → 多个溢写文件 merge 成按分区有序的大文件。Reduce 端：各 Reduce 任务 HTTP 拉取属于自己的分区 → 内存不够溢写 → merge 排序 → 进入 reduce() 函数。整条链路的磁盘 IO 与网络传输就是 shuffle 的全部开销，也是所有 MR 系引擎调优的核心。", "tags": ["高频", "原理"]}
+        {
+          "q": "HDFS 读文件的完整流程？",
+          "a": "1) Client 向 NameNode 请求读某文件；2) NN 返回该文件 Block 列表及各 Block 所在 DataNode 地址（按与客户端距离排序）；3) Client 直接与最近的 DN 建立 Pipeline 流式读取；4) 校验 checksum，读完后关闭连接。读不经过 NameNode 数据面，NN 只管元数据。",
+          "tags": [
+            "高频",
+            "基础"
+          ]
+        },
+        {
+          "q": "HDFS 写文件的完整流程与副本放置策略？",
+          "a": "写入：Client 向 NN 申请写 → NN 检查权限与副本数 → Client 向第一个 DN 建立 Pipeline，数据包边写边流水线复制到第 2、3 个 DN → 全部 ACK 后向 NN 提交。副本放置：第 1 副本放写入方所在节点，第 2 副本放另一机架随机节点，第 3 副本放第 2 副本同机架另一节点——兼顾容灾（机架级故障不丢 2 副本）与带宽（跨机架只走一次）。",
+          "tags": [
+            "高频"
+          ]
+        },
+        {
+          "q": "NameNode HA 是怎么实现的？",
+          "a": "双 NameNode（Active/Standby）共享 EditLog（JournalNode 集群，3 节点过半写成功）。Standby 持续拉取 EditLog 回放合并 FSImage，并接收 DN 的块报告保持 BlockMap 最新。故障切换由 ZKFC（ZooKeeper + 心跳）触发自动 failover，切换期间需保证同一时刻只有一个 Active（ fencing 隔离旧主）。",
+          "tags": [
+            "高频"
+          ]
+        },
+        {
+          "q": "YARN 上一个 MR 作业的完整调度流程？",
+          "a": "1) Client 向 RM 提交作业，分配 ApplicationMaster；2) AM 向 RM 的 Scheduler 注册并申请 Container 资源；3) RM 把 Container 分配给某 NodeManager，AM 与该 NM 通信启动 task（Container）；4) Task 运行、心跳汇报，AM 监控进度；5) 全部完成后 AM 向 RM 注销并释放资源。",
+          "tags": [
+            "高频"
+          ]
+        },
+        {
+          "q": "MapReduce 为什么慢？Spark 为什么快？",
+          "a": "MR 慢在：每个阶段（Map/Reduce）结果都要落盘 HDFS，shuffle 大量磁盘 IO；任务启动是重 JVM 进程，启动开销大；只有 Map 和 Reduce 两个算子表达力差，一个复杂逻辑要串多个 MR 作业。Spark 快在：基于内存 DAG 计算（迭代中间结果不落盘）、线程级 task 复用 Executor 进程、惰性求值统一生成执行计划。",
+          "tags": [
+            "高频",
+            "对比"
+          ]
+        },
+        {
+          "q": "小文件问题为什么危害大？怎么治理？",
+          "a": "每个小文件在 NameNode 至少占 150 字节元数据 + 一个 Block 记录，海量小文件撑爆 NN 堆内存；同时 MR/Spark 按文件切分 task，小文件导致 task 过多、启动开销远超计算。治理：入湖前合并（Avro/ORC SequenceFile 打包）、Spark repartition(1) 重写、HAR 归档、定期离线合并任务；源头控制（Kafka 消费端攒批写、压缩按天分区）。",
+          "tags": [
+            "场景"
+          ]
+        },
+        {
+          "q": "Shuffle 阶段具体发生了什么？",
+          "a": "Map 端：输出先进环形缓冲区（默认 100MB，80% 溢写）→ 按分区+key 排序（可 Combiner）溢写小文件 → 多个溢写文件 merge 成按分区有序的大文件。Reduce 端：各 Reduce 任务 HTTP 拉取属于自己的分区 → 内存不够溢写 → merge 排序 → 进入 reduce() 函数。整条链路的磁盘 IO 与网络传输就是 shuffle 的全部开销，也是所有 MR 系引擎调优的核心。",
+          "tags": [
+            "高频",
+            "原理"
+          ]
+        }
       ]
     },
     {
       "name": "Spark",
       "questions": [
-        {"q": "RDD 有哪些特性？为什么需要 RDD？", "a": "RDD（弹性分布式数据集）五大特性：分区列表（partitions）、每个分区有计算函数、依赖父 RDD（lineage 血统）、可选分区器（KV 数据按 key 分区）、可选本地性优先位置（数据在哪计算在哪）。RDD 提供了不可变、可分区、可并行、可通过血统容灾（重算丢失分区）的抽象，是 Spark 一切算子的统一底座。", "tags": ["高频", "原理"]},
-        {"q": "宽依赖和窄依赖的区别？Stage 怎么划分？", "a": "窄依赖：父 RDD 每个分区最多被子 RDD 一个分区使用（map/filter/union），容灾只需重算单个分区、可以 pipeline 化执行。宽依赖：子分区依赖父 RDD 多个分区（groupByKey/repartition），必须 shuffle。DAGScheduler 从后往前遇到宽依赖就切断，两个宽依赖之间的窄依赖链构成一个 Stage，Stage 内生成 TaskSet 并行执行。", "tags": ["高频"]},
-        {"q": "Spark 数据倾斜怎么定位、怎么解决？", "a": "定位：Spark UI 看 task 的 shuffle read 大小分布，99 分位远大于中位数即倾斜；或采样 countByKey 找出热点 key。解决五板斧：① 过滤掉无意义热点 key；② 两阶段聚合（key 加随机前缀局部聚合 → 去前缀全局聚合）；③ 小表广播 Broadcast Join 绕开 shuffle；④ 大 key 单独拿出来单独 join 再 union 回去；⑤ AQE 自动拆分倾斜分区（spark.sql.adaptive.skewJoin）。", "tags": ["高频", "场景"]},
-        {"q": "cache 和 checkpoint 的区别？", "a": "cache 缓存到内存/本地磁盘，lineage 血统保留，executor 挂了数据丢失可重算，是纯性能优化。checkpoint 把数据可靠地写到 HDFS/S3，会截断 lineage（父依赖被清理），driver 重启后仍可恢复，用于迭代算法（如图计算每 N 轮 checkpoint 一次）和超长血统截断。注意 checkpoint 前建议先 cache，避免写两遍。", "tags": ["原理"]},
-        {"q": "Spark SQL 的一条 SQL 从提交到执行经历什么？", "a": "SQL → ANTLR 解析成 AST → Unresolved 逻辑计划（绑定 Catalog 元数据）→ 优化器（RBO 规则：谓词下推、列裁剪、常量折叠 + CBO 统计代价）→ 多个物理计划选代价最低的 → WholeStageCodegen 生成 Java 字节码（火山模型变全阶段编译）→ RDD DAG 执行。", "tags": ["原理"]},
-        {"q": "repartition 和 coalesce 的区别？", "a": "coalesce 默认不触发 shuffle（把分区合并，父分区数据本地移动），只能减少分区，常用于大分区数作业收尾输出；repartition 底层是 coalesce(shuffle=true)，会发生 shuffle，可增可减分区且分区数据均匀。过滤后数据量骤减时用 coalesce 防止小文件；重新均衡数据时用 repartition。", "tags": ["基础"]},
-        {"q": "Structured Streaming 的微批和连续处理模式？", "a": "默认微批（Micro-Batch）：把无界流切成一个个小 batch，复用 Spark SQL 执行引擎，端到端延迟约 100ms，支持完整的 exactly-once 语义与所有算子。连续处理（Continuous Processing）是实验特性：每条记录异步处理，延迟约 1ms，但只支持 map 类算子、at-least-once 语义。绝大多数场景选微批。", "tags": ["进阶"]}
+        {
+          "q": "RDD 有哪些特性？为什么需要 RDD？",
+          "a": "RDD（弹性分布式数据集）五大特性：分区列表（partitions）、每个分区有计算函数、依赖父 RDD（lineage 血统）、可选分区器（KV 数据按 key 分区）、可选本地性优先位置（数据在哪计算在哪）。RDD 提供了不可变、可分区、可并行、可通过血统容灾（重算丢失分区）的抽象，是 Spark 一切算子的统一底座。",
+          "tags": [
+            "高频",
+            "原理"
+          ]
+        },
+        {
+          "q": "宽依赖和窄依赖的区别？Stage 怎么划分？",
+          "a": "窄依赖：父 RDD 每个分区最多被子 RDD 一个分区使用（map/filter/union），容灾只需重算单个分区、可以 pipeline 化执行。宽依赖：子分区依赖父 RDD 多个分区（groupByKey/repartition），必须 shuffle。DAGScheduler 从后往前遇到宽依赖就切断，两个宽依赖之间的窄依赖链构成一个 Stage，Stage 内生成 TaskSet 并行执行。",
+          "tags": [
+            "高频"
+          ]
+        },
+        {
+          "q": "Spark 数据倾斜怎么定位、怎么解决？",
+          "a": "定位：Spark UI 看 task 的 shuffle read 大小分布，99 分位远大于中位数即倾斜；或采样 countByKey 找出热点 key。解决五板斧：① 过滤掉无意义热点 key；② 两阶段聚合（key 加随机前缀局部聚合 → 去前缀全局聚合）；③ 小表广播 Broadcast Join 绕开 shuffle；④ 大 key 单独拿出来单独 join 再 union 回去；⑤ AQE 自动拆分倾斜分区（spark.sql.adaptive.skewJoin）。",
+          "tags": [
+            "高频",
+            "场景"
+          ]
+        },
+        {
+          "q": "cache 和 checkpoint 的区别？",
+          "a": "cache 缓存到内存/本地磁盘，lineage 血统保留，executor 挂了数据丢失可重算，是纯性能优化。checkpoint 把数据可靠地写到 HDFS/S3，会截断 lineage（父依赖被清理），driver 重启后仍可恢复，用于迭代算法（如图计算每 N 轮 checkpoint 一次）和超长血统截断。注意 checkpoint 前建议先 cache，避免写两遍。",
+          "tags": [
+            "原理"
+          ]
+        },
+        {
+          "q": "Spark SQL 的一条 SQL 从提交到执行经历什么？",
+          "a": "SQL → ANTLR 解析成 AST → Unresolved 逻辑计划（绑定 Catalog 元数据）→ 优化器（RBO 规则：谓词下推、列裁剪、常量折叠 + CBO 统计代价）→ 多个物理计划选代价最低的 → WholeStageCodegen 生成 Java 字节码（火山模型变全阶段编译）→ RDD DAG 执行。",
+          "tags": [
+            "原理"
+          ]
+        },
+        {
+          "q": "repartition 和 coalesce 的区别？",
+          "a": "coalesce 默认不触发 shuffle（把分区合并，父分区数据本地移动），只能减少分区，常用于大分区数作业收尾输出；repartition 底层是 coalesce(shuffle=true)，会发生 shuffle，可增可减分区且分区数据均匀。过滤后数据量骤减时用 coalesce 防止小文件；重新均衡数据时用 repartition。",
+          "tags": [
+            "基础"
+          ]
+        },
+        {
+          "q": "Structured Streaming 的微批和连续处理模式？",
+          "a": "默认微批（Micro-Batch）：把无界流切成一个个小 batch，复用 Spark SQL 执行引擎，端到端延迟约 100ms，支持完整的 exactly-once 语义与所有算子。连续处理（Continuous Processing）是实验特性：每条记录异步处理，延迟约 1ms，但只支持 map 类算子、at-least-once 语义。绝大多数场景选微批。",
+          "tags": [
+            "进阶"
+          ]
+        }
       ]
     },
     {
       "name": "Flink",
       "questions": [
-        {"q": "Flink 为什么是真正的流处理？和 Spark 微批的本质区别？", "a": "Flink 的算子逐条（record-by-record）处理事件，随到随算；时间语义上支持事件时间（Event Time）和 Watermark 处理乱序，Spark 微批只能近似。Flink 有原生的状态管理与 Checkpoint 容错，状态可以无限大（RocksDB 增量快照）；而微批本质是快速重复的小批作业。吞吐上 Spark 微批可能更高（批优化），延迟与语义正确性上 Flink 完胜。", "tags": ["高频", "对比"]},
-        {"q": "Watermark 是什么？怎么解决乱序问题？", "a": "Watermark 是一个单调递增的时间戳标记，含义是「小于该时间戳的事件不会再到来了」。窗口在 watermark 越过 window_end 时触发计算，允许设置 allowedLateness 再等迟到数据；更迟的走 sideOutput 侧道输出单独处理。watermark = 最大事件时间 - 允许乱序时长，从 source 生成（或 keyBy 后各分区取最小）。", "tags": ["高频", "原理"]},
-        {"q": "Checkpoint 的完整流程？", "a": "1) JobManager 定期向所有 source 注入 Barrier；2) Barrier 随数据流向下游，算子收到多输入 Barrier 时对齐（暂停较快的输入）并对齐后做当前状态快照异步写 StateBackend；3) Barrier 汇聚到 Sink，JM 收齐所有算子 ACK 后本次 checkpoint 完成，元数据写入 ZK/HDFS。恢复时全体回滚到最后一次成功快照并重放数据，配合可重置 Source 实现 exactly-once 状态内语义。", "tags": ["高频"]},
-        {"q": "端到端 Exactly-Once 怎么实现？", "a": "三件事缺一不可：① Source 可重放（Kafka offset 由 Flink 管理，恢复时从 checkpoint 位点重放）；② 内部状态 exactly-once（Checkpoint 快照 + barrier 对齐）；③ Sink 两阶段提交（2PC）：预提交写事务数据，收到 checkpoint 完成通知后再 commit。Kafka 事务 Producer、Doris/JDBC XA、HDFS 事务文件重命名都是 2PC 的落地。", "tags": ["高频", "场景"]},
-        {"q": "Flink 反压怎么排查与解决？", "a": "表现：消费延迟持续增大，UI 上算子出现红色反压标记。定位：从 sink 往上游看第一个繁忙算子（busy 100%）。常见原因与对策：数据倾斜（热点 key 分散）、外部存储慢（Sink 异步化 + 批量写）、算子逻辑重（提升并行度）、序列化开销（减少状态访问/用 RocksDB）。Flink credit-based 流控本身有反压保护，不会丢数据只会延迟。", "tags": ["场景"]},
-        {"q": "Savepoint 和 Checkpoint 的区别？", "a": "Checkpoint 自动定期触发、生命周期由 Flink 管理（可保留最近 N 个）、主要用于故障恢复。Savepoint 手动触发、格式更兼容（可跨版本/改并行度）、主要用于作业升级、迁移、A/B 验证。升级作业时用 -s 指定 savepoint 路径恢复状态。", "tags": ["基础"]},
-        {"q": "三种状态后端怎么选？", "a": "HashMapStateBackend：状态存 JVM 堆内存，读写最快，但受堆大小限制且 GC 压力大，适合状态几十 MB~几百 MB 的作业。EmbeddedRocksDBStateBackend：状态存 RocksDB（本地磁盘 LSM），可支撑 TB 级超大状态，但读写要序列化、吞吐降一个量级，务必开增量 checkpoint。生产大状态作业标配 RocksDB + 增量快照。", "tags": ["进阶"]}
+        {
+          "q": "Flink 为什么是真正的流处理？和 Spark 微批的本质区别？",
+          "a": "Flink 的算子逐条（record-by-record）处理事件，随到随算；时间语义上支持事件时间（Event Time）和 Watermark 处理乱序，Spark 微批只能近似。Flink 有原生的状态管理与 Checkpoint 容错，状态可以无限大（RocksDB 增量快照）；而微批本质是快速重复的小批作业。吞吐上 Spark 微批可能更高（批优化），延迟与语义正确性上 Flink 完胜。",
+          "tags": [
+            "高频",
+            "对比"
+          ]
+        },
+        {
+          "q": "Watermark 是什么？怎么解决乱序问题？",
+          "a": "Watermark 是一个单调递增的时间戳标记，含义是「小于该时间戳的事件不会再到来了」。窗口在 watermark 越过 window_end 时触发计算，允许设置 allowedLateness 再等迟到数据；更迟的走 sideOutput 侧道输出单独处理。watermark = 最大事件时间 - 允许乱序时长，从 source 生成（或 keyBy 后各分区取最小）。",
+          "tags": [
+            "高频",
+            "原理"
+          ]
+        },
+        {
+          "q": "Checkpoint 的完整流程？",
+          "a": "1) JobManager 定期向所有 source 注入 Barrier；2) Barrier 随数据流向下游，算子收到多输入 Barrier 时对齐（暂停较快的输入）并对齐后做当前状态快照异步写 StateBackend；3) Barrier 汇聚到 Sink，JM 收齐所有算子 ACK 后本次 checkpoint 完成，元数据写入 ZK/HDFS。恢复时全体回滚到最后一次成功快照并重放数据，配合可重置 Source 实现 exactly-once 状态内语义。",
+          "tags": [
+            "高频"
+          ]
+        },
+        {
+          "q": "端到端 Exactly-Once 怎么实现？",
+          "a": "三件事缺一不可：① Source 可重放（Kafka offset 由 Flink 管理，恢复时从 checkpoint 位点重放）；② 内部状态 exactly-once（Checkpoint 快照 + barrier 对齐）；③ Sink 两阶段提交（2PC）：预提交写事务数据，收到 checkpoint 完成通知后再 commit。Kafka 事务 Producer、Doris/JDBC XA、HDFS 事务文件重命名都是 2PC 的落地。",
+          "tags": [
+            "高频",
+            "场景"
+          ]
+        },
+        {
+          "q": "Flink 反压怎么排查与解决？",
+          "a": "表现：消费延迟持续增大，UI 上算子出现红色反压标记。定位：从 sink 往上游看第一个繁忙算子（busy 100%）。常见原因与对策：数据倾斜（热点 key 分散）、外部存储慢（Sink 异步化 + 批量写）、算子逻辑重（提升并行度）、序列化开销（减少状态访问/用 RocksDB）。Flink credit-based 流控本身有反压保护，不会丢数据只会延迟。",
+          "tags": [
+            "场景"
+          ]
+        },
+        {
+          "q": "Savepoint 和 Checkpoint 的区别？",
+          "a": "Checkpoint 自动定期触发、生命周期由 Flink 管理（可保留最近 N 个）、主要用于故障恢复。Savepoint 手动触发、格式更兼容（可跨版本/改并行度）、主要用于作业升级、迁移、A/B 验证。升级作业时用 -s 指定 savepoint 路径恢复状态。",
+          "tags": [
+            "基础"
+          ]
+        },
+        {
+          "q": "三种状态后端怎么选？",
+          "a": "HashMapStateBackend：状态存 JVM 堆内存，读写最快，但受堆大小限制且 GC 压力大，适合状态几十 MB~几百 MB 的作业。EmbeddedRocksDBStateBackend：状态存 RocksDB（本地磁盘 LSM），可支撑 TB 级超大状态，但读写要序列化、吞吐降一个量级，务必开增量 checkpoint。生产大状态作业标配 RocksDB + 增量快照。",
+          "tags": [
+            "进阶"
+          ]
+        },
+        {
+          "q": "Flink 的运行时架构有哪些角色？各自职责是什么？",
+          "a": "四个核心角色：\n- **JobManager**：作业的主控节点，负责将 JobGraph 转成 ExecutionGraph、向 ResourceManager 申请 Slot、分发任务、协调 Checkpoint 与故障恢复。\n- **TaskManager**：真正干活的 worker，提供任务槽（Slot），执行算子子任务，负责数据交换与状态存储。\n- **ResourceManager**：负责 Slot 的分配与回收，Standalone/YARN/K8s 部署时对接底层资源系统（如向 YARN 申请 Container）。\n- **Dispatcher**：提供 REST 接口接收作业提交、启动 JobManager、渲染 Web UI。\n一句话：Dispatcher 收作业 → JobManager 管作业 → ResourceManager 管 Slot → TaskManager 跑任务。HA 模式下 JobManager 主备切换依靠 ZooKeeper 或 K8s 实现。",
+          "tags": [
+            "简单",
+            "架构",
+            "高频"
+          ]
+        },
+        {
+          "q": "并行度（Parallelism）和 Slot 是什么关系？一个 TaskManager 能开多少并行子任务？",
+          "a": "- **Slot** 是 TaskManager 上资源调度的最小单位（默认只切分内存，CPU 不隔离）。\n- 一个算子的**并行度** = 该算子子任务的个数，每个子任务占一个 Slot。\n- **Slot 共享**：同一个作业中，一条 Slot 共享链（相同 slotSharingGroup，默认 default 组）上的所有算子子任务可以共享一个 Slot。所以一个 TaskManager 有 N 个 Slot，理论上可运行 N × 算子链层数 个子任务。\n- 建议公式：`Slot 数 ≈ max(算子并行度)`（在 slot 共享开启时），TaskManager 的 taskmanager.numberOfTaskSlots 决定每台进程的槽数。\n- 经验：并行度设为 Slot 总数的 1 倍或按 Kafka 分区数/核心数对齐，避免数据倾斜与 Slot 空转。",
+          "tags": [
+            "简单",
+            "资源",
+            "高频"
+          ]
+        },
+        {
+          "q": "Flink 的三种时间语义？实际项目里怎么选？",
+          "a": "- **Event Time（事件时间）**：事件本身携带的时间戳（业务发生时间）。乱序、迟到场景下结果正确，依赖 Watermark 推进。\n- **Processing Time（处理时间）**：算子处理该条数据时的机器时间。延迟最低但结果不确定，重放结果可能不同。\n- **Ingestion Time（摄入时间）**：进入 Flink 的时间，介于两者之间，现已很少用。\n实际选择：**实时报表/统计口径要求准（对账、成交金额）必须 Event Time + Watermark**；监控告警、实时大屏这类允许微小误差、追求极低延迟的场景可以用 Processing Time 省掉状态等待。默认建议 Event Time，时钟来源用 Kafka 消息时间戳或事件字段。",
+          "tags": [
+            "简单",
+            "时间语义",
+            "高频"
+          ]
+        },
+        {
+          "q": "Flink 有哪几类窗口？滚动、滑动、会话窗口分别适用什么场景？",
+          "a": "- **滚动窗口（Tumble）**：长度固定、不重叠。适合每个周期独立统计：每 5 分钟成交额、每日 UV。\n- **滑动窗口（Hop）**：长度固定、可重叠，按滑动步长触发多次。适合趋势监控：每 1 分钟统计过去 5 分钟的 QPS/错误率。\n- **会话窗口（Session）**：以活动间隔 gap 切分，无固定长度。适合用户行为分析：一次会话内的点击数、停留时长。\n- **全局窗口（Global）**：需自定义 Trigger 收集，配合聚合用。\n另外按是否 keyed 分：Keyed Window（每 key 一组窗口，并行计算，推荐）与 Non-Keyed Window（并行度为 1，慎用）。窗口三要素：**分配器（Assigner）+ 触发器（Trigger）+ 驱逐器（Evictor，可选）**。",
+          "tags": [
+            "简单",
+            "窗口",
+            "高频"
+          ]
+        },
+        {
+          "q": "Keyed State 和 Operator State 的区别？分别在什么场景使用？",
+          "a": "- **Keyed State**：只能用在 KeyedStream 后的算子上，状态按 key 隔离，随 key 自动分布到对应子任务，支持 Value/List/Map/Reducing/Aggregating 状态。典型场景：按 user_id 统计累计消费、去重、双流 Join 的缓冲。\n- **Operator State**：算子级别的状态，同一并行子任务共享一份（List State 列表结构），常见于 Source 与 Sink 连接器的实现（如 Kafka source 记录 offset、广播状态）。不支持按 key 访问。\n- 关键差异：**扩缩容重分布方式不同**。Keyed State 按 key group（默认 maxParallelism=128）重新分配，key 与子任务的映射关系保持稳定；Operator State 只能整体轮询（round-robin）或 union 方式重新分配。\n- **Broadcast State** 是特殊的 Operator State：每个子任务持有全量广播数据，与主流按 key 关联（如规则引擎、动态维表广播）。",
+          "tags": [
+            "中等",
+            "状态",
+            "核心原理"
+          ]
+        },
+        {
+          "q": "Flink 双流 Join 有哪几种方式？没有窗口能不能 Join？",
+          "a": "1. **Window Join**：两个流落到同一个窗口，窗口关闭时对窗口内数据做 Join。缺点：晚到窗口关闭时间的数据直接丢弃。\n2. **Interval Join**：给一个时间范围（如 A 事件 ±10s 内的 B 事件），只缓存小范围数据，内存可控，适合订单流和支付流按时间就近匹配。`a.keyBy(...).intervalJoin(b.keyBy(...)).between(Time.minutes(-5), Time.minutes(5))`。\n3. **CoGroup**：可自定义匹配逻辑（含 left/right join 效果），一般也要配窗口。\n4. **Keyed State + 定时器手写 Join**（最灵活）：维表流或主流把数据放入 MapState，注册 Timer 做延迟匹配/超时输出，可精确控制「未匹配也输出」等语义，**这就是没有窗口的 Join**——本质用状态 + 事件时间定时器模拟。\n5. **维表关联（Temporal Table Join / Lookup Join）**：主流 lookup 维表（同步查库或缓存），不是严格意义的双流 Join。\n注意：无限流上的 Join 必须考虑**状态清理（TTL）**，否则状态无限膨胀。",
+          "tags": [
+            "复杂",
+            "双流Join",
+            "高频"
+          ]
+        },
+        {
+          "q": "大状态作业（状态几十 GB）怎么调优？",
+          "a": "1. **换 RocksDB StateBackend**：堆外内存 + LSM 存储，状态可到 TB 级；开启**增量 Checkpoint**（`state.backend.incremental: true`）只传增量 SST 文件，大幅缩短大状态作业的 Checkpoint 时间。\n2. **状态 TTL**：给 MapState/ValueState 设过期时间（`StateTtlConfig`），过期数据后台清理，控制状态规模。\n3. **Checkpoint 调优**：拉长间隔（如 10 分钟）、开对齐超时切非对齐（`execution.checkpointing.unaligned: true`）应对反压；minPauseBetweenCheckpoints 保证间隔内能追完数据。\n4. **RocksDB 调优**：增大 block cache、write buffer 数量与大小，减少磁盘 IO；key 尽量短、避免大对象序列化。\n5. **数据结构选择**：用 AggregatingState 替代 ValueState 存整个 List；去重用 BloomFilter/位图预过滤。\n6. **业务侧**：预聚合下沉（窗口内先聚合再输出）、维表广播代替全量状态。",
+          "tags": [
+            "复杂",
+            "调优",
+            "大状态"
+          ]
+        },
+        {
+          "q": "Broadcast State 是什么？适合什么场景？使用时有什么限制？",
+          "a": "Broadcast State 是一种特殊的 Operator State：把一条低吞吐的**广播流**（如规则、配置、维表）全量复制到每个并行子任务，主流数据在本地与广播状态做关联，**避免每条数据远程查库**。\n\n用法：\n```java\nBroadcastStream<Rule> bc = ruleStream.broadcast(ruleStateDescriptor);\nmainStream.connect(bc).process(new BroadcastProcessFunction<...>() {\n  public void processElement(... ctx, out) {\n    Rule r = ctx.getBroadcastState(ruleDesc).get(event.getType());\n    out.collect(match(event, r));\n  }\n  public void processBroadcastElement(... ctx, out) {\n    ctx.getBroadcastState(ruleDesc).put(rule.getId(), rule);\n  }\n});\n```\n限制：\n- 广播侧**只能读不了主流**、主流侧只能读广播状态不能写；\n- 无 Keyed 状态，不能注册定时器（KeyedBroadcastProcessFunction 可以）；\n- 广播数据量大时会撑爆每个子任务的内存，只适合**小而更新不频繁**的规则/维表；\n- 算子修改广播状态在 Checkpoint 恢复时要注意幂等（重复广播会覆盖，天然幂等没问题）。",
+          "tags": [
+            "中等",
+            "状态",
+            "广播流"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Flink CDC 专项",
+      "questions": [
+        {
+          "q": "什么是 CDC？Flink CDC 的工作原理是什么？",
+          "a": "**CDC（Change Data Capture，变更数据捕获）**：监听数据库的增删改变更，将其捕获为变更流供下游消费。\n\nFlink CDC 的原理：以 MySQL 为例，底层使用 **Debezium** 连接器伪装成 MySQL 的从库（Slave）：\n1. 发送 `COM_DUMP_BINLOG` 命令请求 binlog；\n2. Master 推送 binlog 事件（INSERT/UPDATE/DELETE 的 row 镜像）；\n3. Debezium 解析 binlog 生成变更记录（含 before/after 镜像）；\n4. Flink CDC Source 把变更记录转成 Flink 的流数据（`SourceRecord` → RowData），供 SQL/DataStream 消费。\n\n和普通 Source（如 Kafka Source）的区别：Flink CDC 直接从数据库捕获**行级变更**，天然有序、自带 Exactly-Once 语义位点，不需要业务方做双写或侵入式埋点，是**实时数仓**最常见的入湖入仓方式。",
+          "tags": [
+            "简单",
+            "原理",
+            "高频"
+          ]
+        },
+        {
+          "q": "Flink CDC 2.0 的无锁增量快照算法是怎么实现的？为什么不需要锁表了？",
+          "a": "1.x 时代全量同步用 `flush-and-lock`：`FLUSH TABLES WITH READ LOCK` 锁表拿一致性快照，期间业务写阻塞，大表根本不敢用。\n\n**2.0+ 增量快照算法（Incremental Snapshot，借鉴 Netflix DBLog）核心思想：把全量阶段切分成多个 Chunk（默认 8096 行/块），并行读取 + binlog 增量自动缝合**：\n\n1. **主键分块**：按主键把表逻辑切分为 N 个 chunk；\n2. **单个 chunk 内的一致性读**：读取 chunk 前记录当前 binlog 位点（高水位），SELECT 该 chunk 的快照数据，读完再记录新位点（低水位）；\n3. **binlog 补齐**：回放 [chunk 开始前位点, 当前位点] 之间的 binlog 中属于该 chunk 的变更，**修正到最新状态**——每个 key 只保留最新值，修正发生在 chunk 快照之前/之后各回放一段；\n4. **无锁的关键**：一致性不再依赖全局锁，而是用 binlog 位点做**版本对齐**，单 chunk 内最终状态一致，chunk 间互不影响；\n5. **断点续传**：chunk 状态存入 Flink State，作业失败从上一个完成的 chunk 恢复，不必重读全表。\n\n这就是著名的 **ChunkSplitter + Exactly-Once 修正算法**，全量阶段可并行、可限流、可恢复，对业务库零锁侵入。",
+          "tags": [
+            "复杂",
+            "核心原理",
+            "高频"
+          ]
+        },
+        {
+          "q": "Flink CDC 全量 + 增量阶段怎么无缝衔接？怎么保证不丢不重？",
+          "a": "衔接流程（以 MySQL 为例）：\n1. **全量阶段**：按 chunk 读取历史数据，产出 `op = +I`（INSERT）的记录；每个 chunk 完成时记录 binlog 位点。\n2. **增量阶段**：所有 chunk 读完、快照结束后，Source 切换到**纯 binlog 消费**，从全量开始前的最小位点继续读取。\n3. **一致性窗口**：增量快照算法保证全量读某 chunk 时会回放对应 binlog 段修正数据，所以快照数据 + binlog 重放的最终结果与数据库当前状态一致，**不丢**；\n4. **不重**：Flink Source 的位点（chunk 完成状态 + binlog offset）保存在 **Checkpoint 状态**中，作业从 Checkpoint 恢复时，从上次一致位点继续，配合 Sink 的幂等写或两阶段提交，实现端到端 **Exactly-Once**。\n\n注意坑：如果没开 Checkpoint，Flink CDC 会不断重复读取（没有位点可提交），所以**必须开启 Checkpoint**；单 chunk 内 binlog 修正基于主键 upsert 语义，因此 CDC 表**必须有主键**。",
+          "tags": [
+            "复杂",
+            "一致性",
+            "Exactly-Once"
+          ]
+        },
+        {
+          "q": "Flink CDC 支持哪些数据源和目标端？",
+          "a": "**数据源（Source）**：MySQL、PostgreSQL、Oracle、SQL Server、MongoDB、OceanBase、TiDB、Db2、Vitess、PolarDB（部分由社区/厂商贡献，版本支持度不同，选型前先查对应 CDC Connector 版本表）。\n\n**目标端（Sink）**：只要 Flink 有连接器就能写——Kafka、Doris（flink-doris-connector）、StarRocks、Paimon/Hudi/Iceberg 湖格式、ClickHouse、Elasticsearch、HBase、Redis、JDBC（MySQL/PG）等。\n\n常见组合：\n- MySQL → Kafka（Debezium-JSON/Canal-JSON），供多下游消费；\n- MySQL → Doris/StarRocks 实时数仓 ODS 层；\n- MySQL → Paimon 湖仓 + 后续批处理；\n- MongoDB → Hudi 供 CDC 分析。",
+          "tags": [
+            "简单",
+            "生态",
+            "选型"
+          ]
+        },
+        {
+          "q": "Flink CDC 和 Canal、DataX、Debezium+Kafka 相比怎么选？",
+          "a": "| 方案 | 全量 | 增量 | 实时性 | 一致性 | 适用 |\n|---|---|---|---|---|---|\n| **Flink CDC** | ✅ 无锁并行 | ✅ binlog | 秒级 | 端到端 Exactly-Once | 流批一体入湖入仓，首选 |\n| **Canal** | ❌ | ✅ binlog | 秒级 | at-least-once | 简单同步到 MQ/缓存/ES |\n| **DataX** | ✅ | ❌（靠调度增量） | 分钟/小时 | 批一致性 | 离线全量/批量抽取 |\n| **Debezium+Kafka** | 有（快照） | ✅ | 秒级 | 单 Exactly-Once | Kafka Connect 生态、多语言消费 |\n\n选型建议：\n- 需要**实时分析/入湖入仓 + SQL 开发体验** → Flink CDC；\n- 只做**缓存同步/搜索索引更新**，已有 Canal 运维体系 → Canal；\n- **离线 T+1 批同步**、对时效无要求 → DataX；\n- 组织已在 Kafka Connect 体系内、下游异构语言多 → Debezium+Kafka；也可以 Flink CDC 替代 Debezium 直连省去 Kafka 一跳。",
+          "tags": [
+            "对比",
+            "选型",
+            "高频"
+          ]
+        },
+        {
+          "q": "怎么用 Flink CDC 做整库同步（多表同步到 Doris/Hudi）？",
+          "a": "两条路线：\n\n**1. SQL API 单表建多个作业**（灵活但重复代码多）：每张表一个 FlinkSQL 作业，`CREATE TABLE mysql_source (...) WITH ('connector'='mysql-cdc', ...)` → `INSERT INTO doris_sink`。\n\n**2. 整库同步（推荐）**：\n- **Flink CDC 3.x Pipeline 生态**：写一份 YAML 声明源库和目标端，自动建表、自动路由：\n```yaml\nsource:\n  type: mysql\n  hostname: ...\n  database-name: ^order_db.*\nsink:\n  type: doris\n  fenodes: ...\nroute:\n  source-table: order_db.\\.*\n  sink-table: ods.<>\n```\n`flink-cdc.sh mysql-to-doris.yaml` 一键整库同步，支持新表自动捕获、schema 变更同步。\n- 老版本可用 `Flink CDC Connectors 2.4+` 的 `MySqlTableSource` 多表 + `table-list` 正则，或社区 `flink-cdc-action`（如 `mysql-sync-doris`）工具。\n\n注意点：整库同步作业状态大（多表 chunk + binlog 位点），必须 RocksDB + 增量 Checkpoint；单作业表太多时注意并行度与 chunk 均衡。",
+          "tags": [
+            "复杂",
+            "实战",
+            "整库同步"
+          ]
+        },
+        {
+          "q": "Flink CDC 怎么处理 Schema 变更（加列、改类型）？",
+          "a": "分阶段理解：\n1. **Flink CDC 2.x / SQL 场景**：Flink SQL 的算子是按注册时的 schema 编译的，**运行中加列不会自动生效**——需要重启作业并更新 DDL（新 schema 从 binlog 历史位点继续读）。列顺序变化、删列、改类型需要重新规划同步任务。\n2. **下游格式兼容**：Debezium-JSON/Canal-JSON 里包含 schema 信息，下游按名字取字段（`JSON_VALUE` / `doris.schema-change`）可做**异步补列**。\n3. **Flink CDC 3.x Pipeline**：原生支持部分 **schema evolution**——`ALTER TABLE ADD COLUMN`、列扩容（int→bigint 等）可以自动应用到下游（Doris、Paimon、StarRocks 等已适配 sink），通过 `pipeline.schema.change.behavior: evolve` 开启。\n4. **兜底方案**：源库变更走工单流程，加列默认放最后 + 兼容旧类型；同步作业配置监控（schema 变更告警），定期 diff 源目标表结构。",
+          "tags": [
+            "复杂",
+            "Schema演进",
+            "实战"
+          ]
+        },
+        {
+          "q": "Flink CDC 生产上有哪些常见的坑？怎么解决？",
+          "a": "1. **全量阶段把业务库打挂**：并发 chunk 读 + 无主键表全表扫描。→ 限制 source 并发度、开启 `scan.incremental.snapshot.chunk.size` 控制 chunk 大小、错峰执行、只读从库。\n2. **没开 Checkpoint 重复读取**：CDC 位点靠 Checkpoint 提交。→ 必须开启 Checkpoint，且间隔合理（分钟级）。\n3. **binlog 被清理导致作业无法恢复**：全量跑太久或长时间暂停后 binlog 被 purge。→ 调大 binlog 保留期（如 3 天）、作业尽快恢复、必要时重做全量。\n4. **大事务/大 binlog 事件**：一条事务几百万行变更会形成巨型 binlog event，Debezium 需要缓冲在内存，容易 OOM。→ 拆分业务大事务；Debezium 参数 `max.queue.size` 调整；升级新版本 connector。\n5. **心跳/无数据表位点不推进**：表无变更时 binlog 位点不动，作业重启可能从头回放。→ 开启 `heartbeat.interval.ms`（心跳事件推进位点）。\n6. **时区问题**：`server-time-zone` 不匹配导致时间字段差 8 小时。→ 显式指定 `server-time-zone=Asia/Shanghai`。\n7. **无主键表**：增量快照要求主键。→ 无主键表加主键或降级为 `scan.startup.mode=earliest` 全量非增量模式（2.x 前）、或用 `scan.incremental.snapshot.enabled=false`。",
+          "tags": [
+            "复杂",
+            "生产实践",
+            "避坑"
+          ]
+        },
+        {
+          "q": "Flink CDC 写 Kafka 输出什么格式？下游怎么消费变更流？",
+          "a": "Flink CDC 的 changelog 流写 Kafka 常用 **Debezium-JSON** 或 **Canal-JSON** 格式：\n\n```sql\nCREATE TABLE kafka_sink (\n  id BIGINT, name STRING, op STRING, ...\n) WITH (\n  'connector' = 'kafka',\n  'topic' = 'ods_order_cdc',\n  'format' = 'debezium-json'\n);\n```\n\nDebezium-JSON 消息结构（关键部分）：\n```json\n{\n  \"before\": {\"id\": 1, \"num\": 10},\n  \"after\": {\"id\": 1, \"num\": 20},\n  \"op\": \"u\",\n  \"ts_ms\": 1661234567890,\n  \"source\": {\"db\": \"order_db\", \"table\": \"orders\"}\n}\n```\n\n下游消费方式：\n1. **Flink SQL 再消费**：`'format'='debezium-json'` 的 Kafka source + upsert-kafka / retract 语义，直接做实时聚合；\n2. **Doris Routine Load**：`'format'='json'` + `jsonpaths` 解析 after 镜像，`merge_type` MERGE + delete 标记实现 upsert；\n3. **自写消费者**：按 `op`（c/u/d/r）分发 INSERT/UPDATE/DELETE 逻辑，**注意按主键分区有序**（Kafka 按 key 分区可保证同主键有序）。",
+          "tags": [
+            "中等",
+            "实战",
+            "Kafka"
+          ]
+        },
+        {
+          "q": "Flink CDC 端到端 Exactly-Once 的前提条件是什么？Sink 端怎么配合？",
+          "a": "Exactly-Once 是**整条链路的联合语义**，缺一环都不成立：\n1. **Source 可重放 + 位点提交绑定 Checkpoint**：MySQL binlog 可回放，CDC Source 在 Checkpoint 成功时才把 binlog offset 存入状态，恢复后从该位点继续（无重复消费）。\n2. **Flink 内部**：Checkpoint barrier 对齐（或非对齐）保证算子状态一致快照。\n3. **Sink 端两种方式**：\n   - **两阶段提交（2PC）**：Sink 实现 `TwoPhaseCommittingSinkFunction`，在 Checkpoint 时预提交（pre-commit）、Checkpoint 完成通知（notifyCheckpointComplete）时真正提交事务（如 Kafka 事务 `EXACTLY_ONCE` 模式、JDBC 事务 sink）。要求外部系统支持事务。\n   - **幂等写入**：按主键 upsert（Doris Unique Key、Hudi/.Paimon 主键表、ES doc id），重复写结果一致，等价 Exactly-Once（幂等 + 可重放）。\n4. **常见失败点**：Checkpoint 没开、Sink 不支持事务也不幂等（如普通 append 到 Kafka 无主键去重）、两阶段提交时下游消费需要 `isolation.level=read_committed`。\n\n一句话：**Source 可重放 + Checkpoint 位点 + Sink 事务/幂等** 三者齐备才是端到端 Exactly-Once。",
+          "tags": [
+            "复杂",
+            "一致性",
+            "高频"
+          ]
+        }
       ]
     },
     {
       "name": "Kafka",
       "questions": [
-        {"q": "Kafka 为什么吞吐量这么高？", "a": "四板斧：① 顺序写磁盘（追加日志，600MB/s）；② 页缓存 PageCache 利用 OS 缓存，读写基本不落盘；③ 零拷贝 sendfile，数据从页缓存直接到网卡，不经过用户态；④ 批量 + 压缩（producer 攒批，lz4/zstd），网络与磁盘都按批操作。分区水平扩展让吞吐可线性增加。", "tags": ["高频"]},
-        {"q": "Producer 的三种分区分配策略？", "a": "① 指定分区号直接写入；② 按 key hash（murmur2）到固定分区，保证同 key 有序；③ 粘性分区（无 key 时默认）：优先填满 broker 上已绑定的分区，批满后换分区，减少小批。自定义 Partitioner 可实现热点 key 打散。", "tags": ["基础"]},
-        {"q": "怎么保证消息不丢失？", "a": "生产端：acks=-1（全部 ISR 副本确认）+ retries + 幂等开启；Broker 端：replication.factor≥3、min.insync.replicas≥2（防止单副本确认即成功）、unclean.leader.election=false（禁止落后副本当 Leader）；消费端：先处理完业务再手动提交 offset。三个环节都要配，缺一个都可能丢。", "tags": ["高频", "场景"]},
-        {"q": "Rebalance 什么时候触发？有什么危害？", "a": "触发条件：消费者组成员增减（扩缩容/崩溃，session.timeout 超时）、订阅 topic 或分区数变化。危害：触发期间全组 STOP THE WORLD 不能消费，重复消费已处理未提交的消息。优化：合理 session.timeout.ms/heartbeat、max.poll.records 调小避免处理超时、用静态成员 group.instance.id 避免滚动重启触发、用 CooperativeSticky 分配协议做增量 rebalance。", "tags": ["高频"]},
-        {"q": "Kafka 事务与 Exactly-Once 语义怎么实现？", "a": "Producer 开启事务（transactional.id）后：发送前 initTxn、beginTransaction，写消息带 PID+序列号（幂等去重），再把「消费位移提交」和「产出消息」放进同一事务（sendOffsetsToTransaction），最后 commitTransaction。下游 consumer 设 isolation.level=read_committed 只读已提交数据。跨集群/跨存储的端到端 EoS 还需要消费端幂等或外部事务协调。", "tags": ["进阶"]},
-        {"q": "Kafka 和 RocketMQ 怎么选？", "a": "Kafka：极致吞吐（百万级 QPS）、日志/埋点/流处理标配、生态最全（Connect/Streams/Flink 原生对接），但消息可靠性依赖配置，无延迟消息。RocketMQ：金融级事务消息（半消息+回查）、延迟消息、消息轨迹与重试队列开箱即用，单机吞吐略低于 Kafka。日志流选 Kafka，交易/订单类业务消息选 RocketMQ。", "tags": ["选型"]}
+        {
+          "q": "Kafka 为什么吞吐量这么高？",
+          "a": "四板斧：① 顺序写磁盘（追加日志，600MB/s）；② 页缓存 PageCache 利用 OS 缓存，读写基本不落盘；③ 零拷贝 sendfile，数据从页缓存直接到网卡，不经过用户态；④ 批量 + 压缩（producer 攒批，lz4/zstd），网络与磁盘都按批操作。分区水平扩展让吞吐可线性增加。",
+          "tags": [
+            "高频"
+          ]
+        },
+        {
+          "q": "Producer 的三种分区分配策略？",
+          "a": "① 指定分区号直接写入；② 按 key hash（murmur2）到固定分区，保证同 key 有序；③ 粘性分区（无 key 时默认）：优先填满 broker 上已绑定的分区，批满后换分区，减少小批。自定义 Partitioner 可实现热点 key 打散。",
+          "tags": [
+            "基础"
+          ]
+        },
+        {
+          "q": "怎么保证消息不丢失？",
+          "a": "生产端：acks=-1（全部 ISR 副本确认）+ retries + 幂等开启；Broker 端：replication.factor≥3、min.insync.replicas≥2（防止单副本确认即成功）、unclean.leader.election=false（禁止落后副本当 Leader）；消费端：先处理完业务再手动提交 offset。三个环节都要配，缺一个都可能丢。",
+          "tags": [
+            "高频",
+            "场景"
+          ]
+        },
+        {
+          "q": "Rebalance 什么时候触发？有什么危害？",
+          "a": "触发条件：消费者组成员增减（扩缩容/崩溃，session.timeout 超时）、订阅 topic 或分区数变化。危害：触发期间全组 STOP THE WORLD 不能消费，重复消费已处理未提交的消息。优化：合理 session.timeout.ms/heartbeat、max.poll.records 调小避免处理超时、用静态成员 group.instance.id 避免滚动重启触发、用 CooperativeSticky 分配协议做增量 rebalance。",
+          "tags": [
+            "高频"
+          ]
+        },
+        {
+          "q": "Kafka 事务与 Exactly-Once 语义怎么实现？",
+          "a": "Producer 开启事务（transactional.id）后：发送前 initTxn、beginTransaction，写消息带 PID+序列号（幂等去重），再把「消费位移提交」和「产出消息」放进同一事务（sendOffsetsToTransaction），最后 commitTransaction。下游 consumer 设 isolation.level=read_committed 只读已提交数据。跨集群/跨存储的端到端 EoS 还需要消费端幂等或外部事务协调。",
+          "tags": [
+            "进阶"
+          ]
+        },
+        {
+          "q": "Kafka 和 RocketMQ 怎么选？",
+          "a": "Kafka：极致吞吐（百万级 QPS）、日志/埋点/流处理标配、生态最全（Connect/Streams/Flink 原生对接），但消息可靠性依赖配置，无延迟消息。RocketMQ：金融级事务消息（半消息+回查）、延迟消息、消息轨迹与重试队列开箱即用，单机吞吐略低于 Kafka。日志流选 Kafka，交易/订单类业务消息选 RocketMQ。",
+          "tags": [
+            "选型"
+          ]
+        }
       ]
     },
     {
       "name": "Hive 与数仓",
       "questions": [
-        {"q": "Hive 和关系型数据库的本质区别？", "a": "Hive 是基于 Hadoop 的离线分析工具，SQL 被翻译成 MR/Tez/Spark 分布式作业，延迟分钟级、不适合 OLTP：无行级增删改（事务支持极弱）、查询时全表扫描。MySQL 等是 OLTP 数据库，B+ 树索引、毫秒级点查、完整 ACID。Hive 的价值是把 SQL 生产力带到海量数据的批处理场景。", "tags": ["基础"]},
-        {"q": "分区和分桶的区别与使用场景？", "a": "分区（Partition）：按列值把数据存到不同目录，查询时分区裁剪跳过无关目录，适合按天/业务线等低基数维度组织数据。分桶（Bucket）：按列 hash 分成固定数量文件，用途：① 抽样高效；② bucket map join / SMB join 提速；③ 数据分布均匀防倾斜。分区分桶可叠加：先按天分区，再按 user_id 分 64 桶。", "tags": ["高频"]},
-        {"q": "Hive 数据倾斜的常见场景与对策？", "a": "场景：大 key join 小 key 表、group by 热点 key、count(distinct key)、空值 null 聚集。对策：空值单独过滤或加随机数；map join 广播小表（hive.auto.convert.join）；group by 倾斜开两个参数（hive.groupby.skewindata=true 走两阶段 MR）；count distinct 改写为 group by 再 count；或直接用 Spark AQE 自动处理。", "tags": ["高频", "场景"]},
-        {"q": "为什么数仓要分层？各层职责？", "a": "分层解耦复用：ODS 贴源层（原样落库+基础清洗）、DWD 明细层（业务过程建模、维度退化、一致性清洗）、DWS 汇总层（主题轻度聚合，服务复用）、DIM 维度层、ADS 应用层（直接出指标给报表）。好处：同一逻辑只加工一次（复用）、问题数据逐层可追溯、下游只依赖稳定分层不依赖源库、变更影响面可控。", "tags": ["高频"]},
-        {"q": "星型模型和雪花模型怎么选？", "a": "星型：维度表直接连事实表，反规范化、Join 少、查询快，是数仓主流（尤其 OLAP 引擎 join 能力有限时）。雪花：维度表再拆子维度，规范化省存储但查询多 Join。现代实践：DWD 明细层保留规范化，DWS/ADS 或直接在 Doris/CK 里按查询模式做星型宽表。", "tags": ["建模"]},
-        {"q": "缓慢变化维（SCD）怎么处理？", "a": "SCD1 直接覆盖（不要历史）；SCD2 加行保留历史（新增 start_date/end_date/is_current 列，最常用）；SCD3 加列只保留上一个值。数仓实现：全量拉链表（每日比对，变化关旧开新）或用 Hudi/Iceberg 的 time travel + MERGE 能力直接实现。面试重点讲 SCD2 拉链表实现：首日全量初始化，每日增量 merge 关闭旧记录、插入新记录。", "tags": ["建模", "进阶"]}
+        {
+          "q": "Hive 和关系型数据库的本质区别？",
+          "a": "Hive 是基于 Hadoop 的离线分析工具，SQL 被翻译成 MR/Tez/Spark 分布式作业，延迟分钟级、不适合 OLTP：无行级增删改（事务支持极弱）、查询时全表扫描。MySQL 等是 OLTP 数据库，B+ 树索引、毫秒级点查、完整 ACID。Hive 的价值是把 SQL 生产力带到海量数据的批处理场景。",
+          "tags": [
+            "基础"
+          ]
+        },
+        {
+          "q": "分区和分桶的区别与使用场景？",
+          "a": "分区（Partition）：按列值把数据存到不同目录，查询时分区裁剪跳过无关目录，适合按天/业务线等低基数维度组织数据。分桶（Bucket）：按列 hash 分成固定数量文件，用途：① 抽样高效；② bucket map join / SMB join 提速；③ 数据分布均匀防倾斜。分区分桶可叠加：先按天分区，再按 user_id 分 64 桶。",
+          "tags": [
+            "高频"
+          ]
+        },
+        {
+          "q": "Hive 数据倾斜的常见场景与对策？",
+          "a": "场景：大 key join 小 key 表、group by 热点 key、count(distinct key)、空值 null 聚集。对策：空值单独过滤或加随机数；map join 广播小表（hive.auto.convert.join）；group by 倾斜开两个参数（hive.groupby.skewindata=true 走两阶段 MR）；count distinct 改写为 group by 再 count；或直接用 Spark AQE 自动处理。",
+          "tags": [
+            "高频",
+            "场景"
+          ]
+        },
+        {
+          "q": "为什么数仓要分层？各层职责？",
+          "a": "分层解耦复用：ODS 贴源层（原样落库+基础清洗）、DWD 明细层（业务过程建模、维度退化、一致性清洗）、DWS 汇总层（主题轻度聚合，服务复用）、DIM 维度层、ADS 应用层（直接出指标给报表）。好处：同一逻辑只加工一次（复用）、问题数据逐层可追溯、下游只依赖稳定分层不依赖源库、变更影响面可控。",
+          "tags": [
+            "高频"
+          ]
+        },
+        {
+          "q": "星型模型和雪花模型怎么选？",
+          "a": "星型：维度表直接连事实表，反规范化、Join 少、查询快，是数仓主流（尤其 OLAP 引擎 join 能力有限时）。雪花：维度表再拆子维度，规范化省存储但查询多 Join。现代实践：DWD 明细层保留规范化，DWS/ADS 或直接在 Doris/CK 里按查询模式做星型宽表。",
+          "tags": [
+            "建模"
+          ]
+        },
+        {
+          "q": "缓慢变化维（SCD）怎么处理？",
+          "a": "SCD1 直接覆盖（不要历史）；SCD2 加行保留历史（新增 start_date/end_date/is_current 列，最常用）；SCD3 加列只保留上一个值。数仓实现：全量拉链表（每日比对，变化关旧开新）或用 Hudi/Iceberg 的 time travel + MERGE 能力直接实现。面试重点讲 SCD2 拉链表实现：首日全量初始化，每日增量 merge 关闭旧记录、插入新记录。",
+          "tags": [
+            "建模",
+            "进阶"
+          ]
+        }
       ]
     },
     {
       "name": "ClickHouse / Doris",
       "questions": [
-        {"q": "ClickHouse 为什么查询这么快？", "a": "① 列式存储只读需要的列；② 数据按主键排序存储 + 稀疏索引（每 8192 行一个 mark），跳读大块数据；③ 向量化执行（SIMD 批量处理一列）；④ 预聚合（SummingMergeTree/物化视图）与分区裁剪；⑤ 压缩比高（同列同类型数据压缩后常 10 倍），IO 量骤减。代价：单条更新删除弱、join 能力有限、适合大宽表分析。", "tags": ["高频"]},
-        {"q": "MergeTree 的存储结构？", "a": "表按 Partition 分目录；分区内按 OrderBy 键排序；每个数据段包含 primary.idx（稀疏主键索引）、各列 .bin（压缩数据列）+ .mrk（标记文件，记录主键值到数据物理偏移的映射）。查询：分区裁剪 → 主键二分定位 mark 区间 → 只解压区间内列数据。后台 merge 合并小段、按 TTL/版本策略清理。", "tags": ["原理"]},
-        {"q": "Doris 的架构与三种数据模型？", "a": "FE（元数据管理、SQL 解析、路由，基于 BDBJE 多副本选主）+ BE（数据存储与执行，Tablet 多副本）。数据模型：Duplicate 明细模型（任意追加，明细保留）、Aggregate 聚合模型（按 key 列聚合，如 sum/replace）、Unique 唯一模型（主键去重，相当于 upsert，1.x 用 Merge-on-Read、2.x 默认 MoW 读时合并性能更好）。", "tags": ["高频"]},
-        {"q": "Doris 常用导入方式怎么选？", "a": "Stream Load：HTTP 推文件，适合例行小批量（清洗后的离线结果）；Routine Load：常驻消费 Kafka topic，实时链路标配；Broker Load：从 HDFS/S3 拉大批量文件；Insert Into Select：Doris 内部 ETL。整库同步用 Flink Doris Connector / DataX。原则：大批量低频选 Broker，流式选 Routine Load/Flink，小批量选 Stream Load。", "tags": ["使用方法"]},
-        {"q": "ClickHouse 和 Doris 怎么选？", "a": "ClickHouse：单表极致性能、超高压缩比，但分布式运维复杂（扩容/副本要自己管）、join 与更新弱，适合日志分析、用户行为分析等单宽表场景。Doris：兼容 MySQL 协议、join 能力强、在线扩缩容平滑、运维简单，多表关联的报表场景更稳。国内中大型公司实时数仓明细层用 CH、汇总层报表用 Doris 的组合非常常见。", "tags": ["选型"]}
+        {
+          "q": "ClickHouse 为什么查询这么快？",
+          "a": "① 列式存储只读需要的列；② 数据按主键排序存储 + 稀疏索引（每 8192 行一个 mark），跳读大块数据；③ 向量化执行（SIMD 批量处理一列）；④ 预聚合（SummingMergeTree/物化视图）与分区裁剪；⑤ 压缩比高（同列同类型数据压缩后常 10 倍），IO 量骤减。代价：单条更新删除弱、join 能力有限、适合大宽表分析。",
+          "tags": [
+            "高频"
+          ]
+        },
+        {
+          "q": "MergeTree 的存储结构？",
+          "a": "表按 Partition 分目录；分区内按 OrderBy 键排序；每个数据段包含 primary.idx（稀疏主键索引）、各列 .bin（压缩数据列）+ .mrk（标记文件，记录主键值到数据物理偏移的映射）。查询：分区裁剪 → 主键二分定位 mark 区间 → 只解压区间内列数据。后台 merge 合并小段、按 TTL/版本策略清理。",
+          "tags": [
+            "原理"
+          ]
+        },
+        {
+          "q": "Doris 的架构与三种数据模型？",
+          "a": "FE（元数据管理、SQL 解析、路由，基于 BDBJE 多副本选主）+ BE（数据存储与执行，Tablet 多副本）。数据模型：Duplicate 明细模型（任意追加，明细保留）、Aggregate 聚合模型（按 key 列聚合，如 sum/replace）、Unique 唯一模型（主键去重，相当于 upsert，1.x 用 Merge-on-Read、2.x 默认 MoW 读时合并性能更好）。",
+          "tags": [
+            "高频"
+          ]
+        },
+        {
+          "q": "Doris 常用导入方式怎么选？",
+          "a": "Stream Load：HTTP 推文件，适合例行小批量（清洗后的离线结果）；Routine Load：常驻消费 Kafka topic，实时链路标配；Broker Load：从 HDFS/S3 拉大批量文件；Insert Into Select：Doris 内部 ETL。整库同步用 Flink Doris Connector / DataX。原则：大批量低频选 Broker，流式选 Routine Load/Flink，小批量选 Stream Load。",
+          "tags": [
+            "使用方法"
+          ]
+        },
+        {
+          "q": "ClickHouse 和 Doris 怎么选？",
+          "a": "ClickHouse：单表极致性能、超高压缩比，但分布式运维复杂（扩容/副本要自己管）、join 与更新弱，适合日志分析、用户行为分析等单宽表场景。Doris：兼容 MySQL 协议、join 能力强、在线扩缩容平滑、运维简单，多表关联的报表场景更稳。国内中大型公司实时数仓明细层用 CH、汇总层报表用 Doris 的组合非常常见。",
+          "tags": [
+            "选型"
+          ]
+        }
       ]
     },
     {
       "name": "HBase / Elasticsearch",
       "questions": [
-        {"q": "HBase 读写流程？", "a": "写：先写 WAL（防宕机）→ 写 MemStore → 返回成功；MemStore 满了 flush 成 HFile。读：先查 BlockCache，再查 MemStore，再查 HFile（布隆过滤器加速）；LSM 树结构写快读慢（要合并多个 HFile），靠 Major/Minor Compaction 合并文件提升读性能。", "tags": ["高频"]},
-        {"q": "HBase RowKey 设计原则？热点怎么防？", "a": "原则：长度适中（10~100 字节）、散列分布、兼顾查询模式（把最常用查询条件放前面）。防热点四招：① 加盐（随机前缀，牺牲 get 性能）；② hash 取模/反转（时间戳反转避免单调递增集中到一个 Region）；③ 预分区（建表时按 key 范围切好 Region，StartKey/EndKey 与 RowKey 散列规则匹配）；④ 复合 RowKey 把查询维度编码进去。", "tags": ["高频", "设计"]},
-        {"q": "HBase 和 MySQL/Hive 的区别与定位？", "a": "HBase：NoSQL 列族数据库，LSM 树、KV 随机读写毫秒级、无 SQL 无 join、按 RowKey 的 get/scan。定位：海量（十亿级行）低延迟点查与范围扫描，如用户画像、订单明细库、feed 流。MySQL：强事务 OLTP。Hive：离线分析不是数据库。典型链路：Kafka → Flink → HBase 提供在线服务，Hive/Doris 提供分析。", "tags": ["基础"]},
-        {"q": "ES 为什么搜索快？近实时原理？", "a": "倒排索引：term → 文档 ID 列表（+ posting list 压缩、skip list 跳表、FST 字典），查询直接定位文档集而不是逐条匹配。近实时：写入先进内存 buffer + translog 防丢，refresh（默认 1s）把 buffer 生成新 segment 进入操作系统缓存即可被搜索（所以近实时 1 秒）；segment 不可变，后台 merge 合并，translog 满/定时触发 flush 落盘。", "tags": ["原理"]}
+        {
+          "q": "HBase 读写流程？",
+          "a": "写：先写 WAL（防宕机）→ 写 MemStore → 返回成功；MemStore 满了 flush 成 HFile。读：先查 BlockCache，再查 MemStore，再查 HFile（布隆过滤器加速）；LSM 树结构写快读慢（要合并多个 HFile），靠 Major/Minor Compaction 合并文件提升读性能。",
+          "tags": [
+            "高频"
+          ]
+        },
+        {
+          "q": "HBase RowKey 设计原则？热点怎么防？",
+          "a": "原则：长度适中（10~100 字节）、散列分布、兼顾查询模式（把最常用查询条件放前面）。防热点四招：① 加盐（随机前缀，牺牲 get 性能）；② hash 取模/反转（时间戳反转避免单调递增集中到一个 Region）；③ 预分区（建表时按 key 范围切好 Region，StartKey/EndKey 与 RowKey 散列规则匹配）；④ 复合 RowKey 把查询维度编码进去。",
+          "tags": [
+            "高频",
+            "设计"
+          ]
+        },
+        {
+          "q": "HBase 和 MySQL/Hive 的区别与定位？",
+          "a": "HBase：NoSQL 列族数据库，LSM 树、KV 随机读写毫秒级、无 SQL 无 join、按 RowKey 的 get/scan。定位：海量（十亿级行）低延迟点查与范围扫描，如用户画像、订单明细库、feed 流。MySQL：强事务 OLTP。Hive：离线分析不是数据库。典型链路：Kafka → Flink → HBase 提供在线服务，Hive/Doris 提供分析。",
+          "tags": [
+            "基础"
+          ]
+        },
+        {
+          "q": "ES 为什么搜索快？近实时原理？",
+          "a": "倒排索引：term → 文档 ID 列表（+ posting list 压缩、skip list 跳表、FST 字典），查询直接定位文档集而不是逐条匹配。近实时：写入先进内存 buffer + translog 防丢，refresh（默认 1s）把 buffer 生成新 segment 进入操作系统缓存即可被搜索（所以近实时 1 秒）；segment 不可变，后台 merge 合并，translog 满/定时触发 flush 落盘。",
+          "tags": [
+            "原理"
+          ]
+        }
       ]
     },
     {
       "name": "数据湖",
       "questions": [
-        {"q": "为什么需要数据湖？直接 HDFS + Hive 不行吗？", "a": "Hive 表没有事务：并发写冲突、覆盖丢数据、无法增量 upsert、无 schema 演进安全（改列历史数据失效）、小文件无自动合并。数据湖表格式（Iceberg/Hudi/Delta）在存储之上加了一层元数据（快照 + manifest），带来 ACID、增量、upsert、time travel、schema evolution 等能力，同时保留对象存储的低成本，这就是「湖仓一体」的基础。", "tags": ["高频", "原理"]},
-        {"q": "Iceberg / Hudi / Delta Lake 怎么选？", "a": "Iceberg：架构最完整（隐藏分区、分区演进、独立 Catalog），引擎中立（Spark/Flink/Trino/Doris 都支持好），大规模批场景首选，国内主流。Hudi：upsert/timeline 原生为 CDC 流式入湖设计，Flink 集成最深，实时入湖首选。Delta：Databricks 生态绑定深，Spark 之外支持一般。新项目默认 Iceberg，强 Flink CDC 增量链路考虑 Hudi。", "tags": ["高频", "选型"]},
-        {"q": "Iceberg 的快照与 ACID 怎么实现？", "a": "每次写生成新 Snapshot（metadata.json），指向 manifest list → manifest files → data files，写走「提交即原子切换指针」，读走快照隔离（MOR/OC 快照）。所以并发写不冲突（乐观锁重试）、读不受写入影响、可 time travel 回任意快照、过期快照 expire_snapshots 清理。", "tags": ["原理"]},
-        {"q": "湖仓一体架构长什么样？", "a": "典型：业务库 binlog + 日志 → Kafka → Flink（CDC 解析/清洗）→ Iceberg（S3/HDFS，ODS/DWD 明细）→ Doris/Trino/Spark 查询服务层。离线与实时共用一份湖上明细，汇总层按 SLA 选择 Doris（秒级）或 Spark（T+1）。好处：一份数据、一套治理、存算分离按需扩容，避免传统离线实时两套存储。", "tags": ["架构"]}
+        {
+          "q": "为什么需要数据湖？直接 HDFS + Hive 不行吗？",
+          "a": "Hive 表没有事务：并发写冲突、覆盖丢数据、无法增量 upsert、无 schema 演进安全（改列历史数据失效）、小文件无自动合并。数据湖表格式（Iceberg/Hudi/Delta）在存储之上加了一层元数据（快照 + manifest），带来 ACID、增量、upsert、time travel、schema evolution 等能力，同时保留对象存储的低成本，这就是「湖仓一体」的基础。",
+          "tags": [
+            "高频",
+            "原理"
+          ]
+        },
+        {
+          "q": "Iceberg / Hudi / Delta Lake 怎么选？",
+          "a": "Iceberg：架构最完整（隐藏分区、分区演进、独立 Catalog），引擎中立（Spark/Flink/Trino/Doris 都支持好），大规模批场景首选，国内主流。Hudi：upsert/timeline 原生为 CDC 流式入湖设计，Flink 集成最深，实时入湖首选。Delta：Databricks 生态绑定深，Spark 之外支持一般。新项目默认 Iceberg，强 Flink CDC 增量链路考虑 Hudi。",
+          "tags": [
+            "高频",
+            "选型"
+          ]
+        },
+        {
+          "q": "Iceberg 的快照与 ACID 怎么实现？",
+          "a": "每次写生成新 Snapshot（metadata.json），指向 manifest list → manifest files → data files，写走「提交即原子切换指针」，读走快照隔离（MOR/OC 快照）。所以并发写不冲突（乐观锁重试）、读不受写入影响、可 time travel 回任意快照、过期快照 expire_snapshots 清理。",
+          "tags": [
+            "原理"
+          ]
+        },
+        {
+          "q": "湖仓一体架构长什么样？",
+          "a": "典型：业务库 binlog + 日志 → Kafka → Flink（CDC 解析/清洗）→ Iceberg（S3/HDFS，ODS/DWD 明细）→ Doris/Trino/Spark 查询服务层。离线与实时共用一份湖上明细，汇总层按 SLA 选择 Doris（秒级）或 Spark（T+1）。好处：一份数据、一套治理、存算分离按需扩容，避免传统离线实时两套存储。",
+          "tags": [
+            "架构"
+          ]
+        }
       ]
     },
     {
       "name": "场景与架构设计",
       "questions": [
-        {"q": "设计一个实时数仓（说出完整链路）", "a": "日志埋点/业务库 binlog → 采集层（Flink CDC / Flume）→ Kafka（ODS 主题）→ Flink 清洗 join 维表（Kafka/Redis/HBase 维度）写 DWD/DWS 主题 → Doris/ClickHouse 扛明细与聚合查询 → 大屏、告警、接口服务。要点：Kafka 做缓冲与解耦；维表用广播缓存/异步 IO；大状态用 RocksDB 增量 checkpoint；Exactly-Once 用 2PC sink；数据质量用旁路对账。", "tags": ["高频", "架构"]},
-        {"q": "Lambda 架构和 Kappa 架构的区别？", "a": "Lambda：批层（Spark/Hive T+1 全量保准确）+ 速度层（Flink 实时保时效）+ 服务层合并，缺点两套代码两套口径。Kappa：只留流式链路，需要重算就重放 Kafka 历史消息（保留足够窗口），一套代码。实践趋势是「Kappa+」：流批一体的 Flink + 湖存储，重算场景直接读湖回放。", "tags": ["架构", "对比"]},
-        {"q": "每日 100 亿条日志，从采集到可查询怎么设计？", "a": "按峰值 50 万 QPS：前端 SDK/App 打包压缩 → Nginx/Flume/LogHub 采集层负载均衡 → Kafka（按 app+日期分区，分区数≈峰值吞吐/单分区 10MB）→ Flink 解析清洗（乱序容忍 + 脏数据旁路）→ 双写：Iceberg/HDFS（全量明细，供回溯）+ ClickHouse（近 30 天，供查询）；风控/大盘走 Doris 汇总层。治理：按天分区自动过期、小文件 merge 任务、延迟与丢失率监控告警。", "tags": ["场景", "架构"]},
-        {"q": "两张 10 亿级大表 Join 跑不动，怎么优化？", "a": "按顺序排查：① 能否提前过滤减少数据量（分区、时间范围）；② 其中一张能否按 join key 预分桶（bucket join/SMB join 免 shuffle）；③ 大小悬殊改 broadcast；④ 倾斜 key 拆出来单独处理再 union；⑤ 改架构：把 join 提前到入库时（Flink 流式打宽，落宽表后查询无需 join）；⑥ 实在不行用范围 key 分片多任务分别 join 再合并。终极答案是「宽表化」——join 越早做越好。", "tags": ["高频", "场景"]},
-        {"q": "业务库 2TB 数据怎么实时同步到数仓？", "a": "首选 Flink CDC（debezium 内核）：binlog 订阅无侵入，source 并行分片全量快照 + 增量合一，直接打宽或入 Iceberg/Hudi upsert，整库同步用 Flink CDC 3.x 的 pipeline YAML。备选：Canal/OGG 订阅 binlog 落 Kafka；全量初始化用 DataX/Spark，增量用 CDC 合并。注意：分库分表路由映射、schema 变更兼容、全量转增量的位点衔接。", "tags": ["场景"]}
+        {
+          "q": "设计一个实时数仓（说出完整链路）",
+          "a": "日志埋点/业务库 binlog → 采集层（Flink CDC / Flume）→ Kafka（ODS 主题）→ Flink 清洗 join 维表（Kafka/Redis/HBase 维度）写 DWD/DWS 主题 → Doris/ClickHouse 扛明细与聚合查询 → 大屏、告警、接口服务。要点：Kafka 做缓冲与解耦；维表用广播缓存/异步 IO；大状态用 RocksDB 增量 checkpoint；Exactly-Once 用 2PC sink；数据质量用旁路对账。",
+          "tags": [
+            "高频",
+            "架构"
+          ]
+        },
+        {
+          "q": "Lambda 架构和 Kappa 架构的区别？",
+          "a": "Lambda：批层（Spark/Hive T+1 全量保准确）+ 速度层（Flink 实时保时效）+ 服务层合并，缺点两套代码两套口径。Kappa：只留流式链路，需要重算就重放 Kafka 历史消息（保留足够窗口），一套代码。实践趋势是「Kappa+」：流批一体的 Flink + 湖存储，重算场景直接读湖回放。",
+          "tags": [
+            "架构",
+            "对比"
+          ]
+        },
+        {
+          "q": "每日 100 亿条日志，从采集到可查询怎么设计？",
+          "a": "按峰值 50 万 QPS：前端 SDK/App 打包压缩 → Nginx/Flume/LogHub 采集层负载均衡 → Kafka（按 app+日期分区，分区数≈峰值吞吐/单分区 10MB）→ Flink 解析清洗（乱序容忍 + 脏数据旁路）→ 双写：Iceberg/HDFS（全量明细，供回溯）+ ClickHouse（近 30 天，供查询）；风控/大盘走 Doris 汇总层。治理：按天分区自动过期、小文件 merge 任务、延迟与丢失率监控告警。",
+          "tags": [
+            "场景",
+            "架构"
+          ]
+        },
+        {
+          "q": "两张 10 亿级大表 Join 跑不动，怎么优化？",
+          "a": "按顺序排查：① 能否提前过滤减少数据量（分区、时间范围）；② 其中一张能否按 join key 预分桶（bucket join/SMB join 免 shuffle）；③ 大小悬殊改 broadcast；④ 倾斜 key 拆出来单独处理再 union；⑤ 改架构：把 join 提前到入库时（Flink 流式打宽，落宽表后查询无需 join）；⑥ 实在不行用范围 key 分片多任务分别 join 再合并。终极答案是「宽表化」——join 越早做越好。",
+          "tags": [
+            "高频",
+            "场景"
+          ]
+        },
+        {
+          "q": "业务库 2TB 数据怎么实时同步到数仓？",
+          "a": "首选 Flink CDC（debezium 内核）：binlog 订阅无侵入，source 并行分片全量快照 + 增量合一，直接打宽或入 Iceberg/Hudi upsert，整库同步用 Flink CDC 3.x 的 pipeline YAML。备选：Canal/OGG 订阅 binlog 落 Kafka；全量初始化用 DataX/Spark，增量用 CDC 合并。注意：分库分表路由映射、schema 变更兼容、全量转增量的位点衔接。",
+          "tags": [
+            "场景"
+          ]
+        }
       ]
     },
     {
       "name": "手写 SQL 专项",
       "questions": [
-        {"q": "连续 3 天登录的用户（login 表：user_id, dt）", "a": "思路：按用户分组、日期排序，用 dt - row_number 天数差，连续日期的差值相同，再分组计数。\n```sql\nSELECT user_id\nFROM (\n  SELECT user_id, dt,\n         DATE_SUB(dt, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY dt)) AS diff\n  FROM login\n) t\nGROUP BY user_id, diff\nHAVING COUNT(*) >= 3;\n```", "tags": ["高频", "手写"]},
-        {"q": "每个班级成绩前 2 名（score 表：class, student, score）", "a": "开窗函数是标准答案：\n```sql\nSELECT class, student, score FROM (\n  SELECT class, student, score,\n         ROW_NUMBER() OVER (PARTITION BY class ORDER BY score DESC) AS rk\n  FROM score\n) t WHERE rk <= 2;\n```\n追问「并列怎么办」时把 ROW_NUMBER 换成 RANK 或 DENSE_RANK，并讲清三者区别。", "tags": ["高频", "手写"]},
-        {"q": "求次日留存率（active 表：user_id, dt）", "a": "自关联：今日活跃与明日活跃 join，除以今日活跃数。\n```sql\nSELECT t1.dt,\n       COUNT(DISTINCT t1.user_id) AS uv,\n       COUNT(DISTINCT t2.user_id) AS keep_uv,\n       ROUND(COUNT(DISTINCT t2.user_id) / COUNT(DISTINCT t1.user_id), 3) AS rate\nFROM active t1\nLEFT JOIN active t2\n  ON t1.user_id = t2.user_id AND t2.dt = DATE_ADD(t1.dt, 1)\nGROUP BY t1.dt;\n```", "tags": ["高频", "手写"]},
-        {"q": "行转列：每月各科成绩（score 表：name, month, subject, score）", "a": "```sql\nSELECT name, month,\n  MAX(CASE WHEN subject='语文' THEN score END) AS chinese,\n  MAX(CASE WHEN subject='数学' THEN score END) AS math,\n  MAX(CASE WHEN subject='英语' THEN score END) AS english\nFROM score\nGROUP BY name, month;\n```\n列转行反向操作用 LATERAL VIEW explode(map('语文',chinese,'数学',math))。", "tags": ["手写"]},
-        {"q": "累计求和：每日销售额与累计销售额（sales: dt, amount）", "a": "```sql\nSELECT dt, amount,\n       SUM(amount) OVER (ORDER BY dt ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS cum\nFROM sales;\n```\n能顺口说出窗口框架（ROWS vs RANGE 的区别）是加分项。", "tags": ["手写"]}
+        {
+          "q": "连续 3 天登录的用户（login 表：user_id, dt）",
+          "a": "思路：按用户分组、日期排序，用 dt - row_number 天数差，连续日期的差值相同，再分组计数。\n```sql\nSELECT user_id\nFROM (\n  SELECT user_id, dt,\n         DATE_SUB(dt, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY dt)) AS diff\n  FROM login\n) t\nGROUP BY user_id, diff\nHAVING COUNT(*) >= 3;\n```",
+          "tags": [
+            "高频",
+            "手写"
+          ]
+        },
+        {
+          "q": "每个班级成绩前 2 名（score 表：class, student, score）",
+          "a": "开窗函数是标准答案：\n```sql\nSELECT class, student, score FROM (\n  SELECT class, student, score,\n         ROW_NUMBER() OVER (PARTITION BY class ORDER BY score DESC) AS rk\n  FROM score\n) t WHERE rk <= 2;\n```\n追问「并列怎么办」时把 ROW_NUMBER 换成 RANK 或 DENSE_RANK，并讲清三者区别。",
+          "tags": [
+            "高频",
+            "手写"
+          ]
+        },
+        {
+          "q": "求次日留存率（active 表：user_id, dt）",
+          "a": "自关联：今日活跃与明日活跃 join，除以今日活跃数。\n```sql\nSELECT t1.dt,\n       COUNT(DISTINCT t1.user_id) AS uv,\n       COUNT(DISTINCT t2.user_id) AS keep_uv,\n       ROUND(COUNT(DISTINCT t2.user_id) / COUNT(DISTINCT t1.user_id), 3) AS rate\nFROM active t1\nLEFT JOIN active t2\n  ON t1.user_id = t2.user_id AND t2.dt = DATE_ADD(t1.dt, 1)\nGROUP BY t1.dt;\n```",
+          "tags": [
+            "高频",
+            "手写"
+          ]
+        },
+        {
+          "q": "行转列：每月各科成绩（score 表：name, month, subject, score）",
+          "a": "```sql\nSELECT name, month,\n  MAX(CASE WHEN subject='语文' THEN score END) AS chinese,\n  MAX(CASE WHEN subject='数学' THEN score END) AS math,\n  MAX(CASE WHEN subject='英语' THEN score END) AS english\nFROM score\nGROUP BY name, month;\n```\n列转行反向操作用 LATERAL VIEW explode(map('语文',chinese,'数学',math))。",
+          "tags": [
+            "手写"
+          ]
+        },
+        {
+          "q": "累计求和：每日销售额与累计销售额（sales: dt, amount）",
+          "a": "```sql\nSELECT dt, amount,\n       SUM(amount) OVER (ORDER BY dt ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS cum\nFROM sales;\n```\n能顺口说出窗口框架（ROWS vs RANGE 的区别）是加分项。",
+          "tags": [
+            "手写"
+          ]
+        }
       ]
     },
     {
       "name": "HR 面与项目包装",
       "questions": [
-        {"q": "自我介绍怎么说（30 秒模板）", "a": "结构：我是谁（年限+方向）→ 我做过什么（1 个最拿得出手的项目：规模数据量+技术栈+成果数字）→ 我为什么匹配这个岗位（对方 JD 的核心要求）。示例：'5 年大数据开发，主导日均 20 亿日志的实时数仓建设，Kafka+Flink+Doris 链路，大屏延迟从 10 分钟降到 5 秒；贵司岗位要求的实时链路经验正是我最深入的部分。'——忌背简历、忌流水账。", "tags": ["模板"]},
-        {"q": "项目中遇到的最大难点（STAR 法）", "a": " Situation：日均 20 亿日志，高峰 Flink 作业频繁反压，大屏延迟超标。Task：3 周内把延迟稳定降到秒级。Action：定位到维表同步 IO 阻塞 → 改异步 IO + Redis 缓存预加载；热点 key 倾斜 → 两阶段聚合；Sink 改批量攒写。Result：延迟从 90s 降到 3s 以内，节省 40% 计算资源。要点：必须有数字、有取舍、有个人贡献边界（你做了什么，不是团队泛泛做了什么）。", "tags": ["模板"]},
-        {"q": "被问到不会的技术问题怎么办？", "a": "四步话术：① 坦诚「这块我实践不深」不硬编；② 迁移「但我知道它在 X 场景和 Y 类似，原理上应该是……」；③ 展示学习力「我们生产里用的是 Z，当时选型对比过」；④ 反问确认「您说的是不是指 XX 场景？」。面试官考察的往往不是答案本身，而是技术诚实度与思维路径。切忌不懂装懂，连环追问会直接露馅。", "tags": ["话术"]},
-        {"q": "离职原因 / 职业规划怎么答？", "a": "离职原因公式 = 不可抗的客观因素 + 向往对方的点：'业务线调整，我想在实时数仓方向更深地发展，而贵司这边链路规模是我一直想做但前公司没有条件做的'。不说：薪资低（可作次要理由）、领导同事矛盾、加班。职业规划：短期（入职 3~6 个月吃透现有链路做出产出）+ 中期（2~3 年在湖仓一体/实时化方向成为 owner），与该岗位的成长路径绑定。", "tags": ["话术"]}
+        {
+          "q": "自我介绍怎么说（30 秒模板）",
+          "a": "结构：我是谁（年限+方向）→ 我做过什么（1 个最拿得出手的项目：规模数据量+技术栈+成果数字）→ 我为什么匹配这个岗位（对方 JD 的核心要求）。示例：'5 年大数据开发，主导日均 20 亿日志的实时数仓建设，Kafka+Flink+Doris 链路，大屏延迟从 10 分钟降到 5 秒；贵司岗位要求的实时链路经验正是我最深入的部分。'——忌背简历、忌流水账。",
+          "tags": [
+            "模板"
+          ]
+        },
+        {
+          "q": "项目中遇到的最大难点（STAR 法）",
+          "a": " Situation：日均 20 亿日志，高峰 Flink 作业频繁反压，大屏延迟超标。Task：3 周内把延迟稳定降到秒级。Action：定位到维表同步 IO 阻塞 → 改异步 IO + Redis 缓存预加载；热点 key 倾斜 → 两阶段聚合；Sink 改批量攒写。Result：延迟从 90s 降到 3s 以内，节省 40% 计算资源。要点：必须有数字、有取舍、有个人贡献边界（你做了什么，不是团队泛泛做了什么）。",
+          "tags": [
+            "模板"
+          ]
+        },
+        {
+          "q": "被问到不会的技术问题怎么办？",
+          "a": "四步话术：① 坦诚「这块我实践不深」不硬编；② 迁移「但我知道它在 X 场景和 Y 类似，原理上应该是……」；③ 展示学习力「我们生产里用的是 Z，当时选型对比过」；④ 反问确认「您说的是不是指 XX 场景？」。面试官考察的往往不是答案本身，而是技术诚实度与思维路径。切忌不懂装懂，连环追问会直接露馅。",
+          "tags": [
+            "话术"
+          ]
+        },
+        {
+          "q": "离职原因 / 职业规划怎么答？",
+          "a": "离职原因公式 = 不可抗的客观因素 + 向往对方的点：'业务线调整，我想在实时数仓方向更深地发展，而贵司这边链路规模是我一直想做但前公司没有条件做的'。不说：薪资低（可作次要理由）、领导同事矛盾、加班。职业规划：短期（入职 3~6 个月吃透现有链路做出产出）+ 中期（2~3 年在湖仓一体/实时化方向成为 owner），与该岗位的成长路径绑定。",
+          "tags": [
+            "话术"
+          ]
+        }
       ]
     }
   ]
