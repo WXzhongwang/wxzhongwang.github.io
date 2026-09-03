@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>卡片详情 · zhongwang 的大数据宝典</title>
+<!-- 卡片详情子页：?id=xxx；含子知识点目录、结构图、全部内容、完成复习、上/下卡导航 -->
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+
+<header>
+  <div class="hd-inner">
+    <a class="hd-back" href="index.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      返回卡片库
+    </a>
+    <div class="hd-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+      </svg>
+    </div>
+    <div>
+      <div class="hd-title">zhongwang 的大数据宝典</div>
+      <div class="hd-sub">卡片详情</div>
+    </div>
+    <div class="hd-right">
+      <span class="sync-pill"><span class="sync-dot" id="syncDot"></span><span id="syncText">加载中</span></span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="cd-card" id="cdCard">
+    <div class="detail-stack" id="cdMeta"></div>
+    <h1 class="cd-title" id="cdTitle">加载中…</h1>
+    <div id="cdTocBox"></div>
+    <div class="detail-markdown" id="cdContent"></div>
+    <div class="cd-foot" id="cdFoot"></div>
+  </div>
+  <div class="cd-pn" id="cdPn"></div>
+  <div id="cdEmpty"></div>
+</div>
+
+<!-- 底部移动端导航 -->
+<nav class="bottom-nav">
+  <a class="bn-item" href="index.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+    卡片库
+  </a>
+  <a class="bn-item" href="interview.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+    面试专题
+  </a>
+  <a class="bn-item" href="stats.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+    统计
+  </a>
+  <a class="bn-item" href="algo.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 20H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10"></path><path d="M10 20v-6h6v6"></path><path d="M22 22l-5-5"></path><circle cx="17.5" cy="17.5" r="3.5"></circle></svg>
+    算法
+  </a>
+  <a class="bn-item" href="bank.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+    题库
+  </a>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script src="assets/app.js"></script>
+<script>
+(function () {
+  var $ = BD.$, esc = BD.esc;
+
+  function getParam(name) {
+    var m = location.search.match(new RegExp('[?&]' + name + '=([^&]*)'));
+    return m ? decodeURIComponent(m[1]) : '';
+  }
+
+  var CARD_ID = getParam('id');
+  var ROWS = [];
+  var ROW = null;
+
+  function init() {
+    if (!CARD_ID) { renderNotFound('缺少卡片参数'); return; }
+    BD.loadRows(function (rows, ok, count) {
+      ROWS = rows;
+      BD.setSync(ok, count);
+      for (var i = 0; i < rows.length; i++) { if (rows[i]._id === CARD_ID) { ROW = rows[i]; break; } }
+      if (!ROW) { renderNotFound('未找到该卡片（可能已被更新，请从卡片库重新进入）'); return; }
+      renderCard();
+    });
+  }
+
+  function renderNotFound(msg) {
+    $('cdCard').classList.add('hidden');
+    $('cdPn').innerHTML = '';
+    $('cdEmpty').innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg><div>' + esc(msg) + '</div><div style="margin-top:14px"><a class="btn-ghost" href="index.html">← 返回卡片库</a></div></div>';
+    BD.setSync(false, 0);
+  }
+
+  function renderCard() {
+    document.title = (ROW['名称'] || '卡片详情') + ' · zhongwang 的大数据宝典';
+    /* 元信息 chips */
+    var meta = '';
+    var stack = ROW['技术栈'];
+    var types = ROW['知识类型'] || [];
+    var lv = ROW['掌握度'] || '待学习';
+    if (stack) meta += '<span class="k-stack">' + esc(stack) + '</span>';
+    for (var i = 0; i < types.length; i++) { meta += '<span class="k-type" style="background:var(--primary-soft);color:var(--primary)">' + esc(types[i]) + '</span>'; }
+    meta += '<span class="k-level ' + BD.levelClass(lv) + '">' + esc(lv) + '</span>';
+    $('cdMeta').innerHTML = meta;
+    $('cdTitle').textContent = ROW['名称'] || '未命名';
+
+    /* 子知识点目录 */
+    var secs = BD.extractSections(ROW['详细内容']);
+    var tocBox = $('cdTocBox');
+    if (secs.length >= 2) {
+      var ol = '';
+      secs.forEach(function (s, i) {
+        ol += '<li style="margin-left:' + (s.level === 3 ? 14 : 0) + 'px"><a href="#bd-sec-' + i + '">' + esc(s.title) + '</a></li>';
+      });
+      tocBox.innerHTML = '<div class="cd-toc"><h3>📑 本卡子知识点（' + secs.length + '）</h3><ol>' + ol + '</ol></div>';
+    } else {
+      tocBox.innerHTML = '';
+    }
+
+    /* 结构图 + 正文 */
+    var diaHtml = ROW['结构图'] ? '<div class="detail-diagram"><div class="dg-cap">📐 结构示意（辅助记忆）</div>' + ROW['结构图'] + '</div>' : '';
+    $('cdContent').innerHTML = diaHtml + (BD.renderMarkdown(ROW['详细内容']) || '<p style="color:var(--text3)">（暂无详细内容，可前往 GitHub 仓库 data.json 补充）</p>');
+
+    renderFoot();
+    renderPn();
+  }
+
+  function renderFoot() {
+    var du = BD.daysUntil(ROW['下次复习']);
+    var info = '已复习 ' + (ROW['复习次数'] || 0) + ' 次 · 上次复习 ' + (ROW['上次复习'] ? BD.fmtDate(ROW['上次复习']) : '从未') + ' · 下次 ';
+    info += du < 0 ? '逾期 ' + (-du) + ' 天' : BD.fmtDate(ROW['下次复习']);
+    var html = '<div style="width:100%;font-size:12px;color:var(--text2)">' + info + '</div>';
+    html += '<button class="btn-done" id="cdDone" style="width:100%"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' + (du < 0 ? '补复习' : '完成复习') + '</button>';
+    $('cdFoot').innerHTML = html;
+    $('cdDone').onclick = function () {
+      BD.completeReview(ROW);
+      var lv = ROW['掌握度'] || '待学习';
+      $('cdMeta').innerHTML = $('cdMeta').innerHTML.replace(/<span class="k-level[^>]*>[^<]*<\/span>$/, '<span class="k-level ' + BD.levelClass(lv) + '">' + esc(lv) + '</span>');
+      renderFoot();
+    };
+  }
+
+  /* 上一张 / 下一张 */
+  function renderPn() {
+    var idx = -1;
+    for (var i = 0; i < ROWS.length; i++) { if (ROWS[i]._id === CARD_ID) { idx = i; break; } }
+    var html = '';
+    if (idx > 0) {
+      var p = ROWS[idx - 1];
+      html += '<a href="' + BD.cardUrl(p._id) + '">← <b>' + esc(p['名称'] || '上一张') + '</b></a>';
+    } else {
+      html += '<a href="index.html">← 返回卡片库</a>';
+    }
+    if (idx >= 0 && idx < ROWS.length - 1) {
+      var n = ROWS[idx + 1];
+      html += '<a class="next" href="' + BD.cardUrl(n._id) + '"><b>' + esc(n['名称'] || '下一张') + '</b> →</a>';
+    } else {
+      html += '<a class="next" href="index.html">返回卡片库 →</a>';
+    }
+    $('cdPn').innerHTML = html;
+  }
+
+  window.addEventListener('DOMContentLoaded', init);
+})();
+</script>
+</body>
+</html>
