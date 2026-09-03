@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>面试专题 · zhongwang 的大数据宝典</title>
+<!-- 面试专题页：专项题库（interview.json）+ 我的面试题卡片 -->
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+
+<header>
+  <div class="hd-inner">
+    <div class="hd-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+      </svg>
+    </div>
+    <div>
+      <div class="hd-title">zhongwang 的大数据宝典</div>
+      <div class="hd-sub">面试专题</div>
+    </div>
+    <div class="hd-right">
+      <span class="sync-pill"><span class="sync-dot" id="syncDot"></span><span id="syncText">加载中</span></span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- 顶部页面导航（PC） -->
+  <nav class="tabs">
+    <a class="tab" href="index.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+      知识卡片库
+    </a>
+    <a class="tab on" href="interview.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+      面试专题
+    </a>
+    <a class="tab" href="stats.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+      学习统计
+    </a>
+    <a class="tab" href="algo.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 20H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10"></path><path d="M10 20v-6h6v6"></path><path d="M22 22l-5-5"></path><circle cx="17.5" cy="17.5" r="3.5"></circle></svg>
+      算法刷题
+    </a>
+    <a class="tab" href="bank.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+      中间件题库
+    </a>
+  </nav>
+
+  <div class="subtabs">
+    <button class="subtab on" id="subBank" onclick="switchIvView('bank')">📚 专项题库</button>
+    <button class="subtab" id="subMine" onclick="switchIvView('mine')">🗂 我的面试题卡片</button>
+  </div>
+  <div id="ivBank">
+    <div class="bank-tool">
+      <button class="btn-random" onclick="randomQuestion()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+        随机一题（模拟面试）
+      </button>
+      <span class="bank-meta" id="bankMeta">题库加载中…</span>
+    </div>
+    <div id="bankList"></div>
+  </div>
+  <div id="ivMine" class="hidden">
+    <div class="iq-list" id="iqList"></div>
+    <div id="iqEmpty"></div>
+  </div>
+</div>
+
+<!-- 底部移动端导航 -->
+<nav class="bottom-nav">
+  <a class="bn-item" href="index.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+    卡片库
+  </a>
+  <a class="bn-item on" href="interview.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+    面试专题
+  </a>
+  <a class="bn-item" href="stats.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+    统计
+  </a>
+  <a class="bn-item" href="algo.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 20H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10"></path><path d="M10 20v-6h6v6"></path><path d="M22 22l-5-5"></path><circle cx="17.5" cy="17.5" r="3.5"></circle></svg>
+    算法
+  </a>
+  <a class="bn-item" href="bank.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+    题库
+  </a>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script src="assets/app.js"></script>
+<script>
+(function () {
+  var $ = BD.$, esc = BD.esc, toast = BD.toast;
+  var IV_BANK = null;
+  var ROWS = [];
+
+  function init() {
+    BD.setSync(null);
+    BD.loadInterview(function (bank) {
+      IV_BANK = bank;
+      if (bank) renderBank();
+      else {
+        $('bankList').innerHTML = '<div class="empty-state"><div>题库加载失败，请刷新重试</div></div>';
+        $('bankMeta').textContent = '';
+      }
+    });
+    BD.loadRows(function (rows, ok, count) {
+      ROWS = rows;
+      BD.setSync(ok, count);
+      renderMine();
+    });
+  }
+
+  function bankTotal(bank) {
+    var n = 0;
+    (bank.categories || []).forEach(function (c) { n += c.questions.length; });
+    return n;
+  }
+
+  function renderBank() {
+    var bank = IV_BANK;
+    if (!bank) return;
+    $('bankMeta').textContent = bankTotal(bank) + ' 道高频题 · ' + bank.categories.length + ' 大分类 · 更新于 ' + (bank.updated || '');
+    var list = $('bankList'); list.innerHTML = '';
+    bank.categories.forEach(function (cat, ci) {
+      var item = document.createElement('div'); item.className = 'cat-item' + (ci === 0 ? ' open' : '');
+      var head = document.createElement('div'); head.className = 'cat-head';
+      head.innerHTML = '<h3>' + esc(cat.name) + '</h3><span class="cat-count">' + cat.questions.length + ' 题</span>'
+        + '<span class="iq-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>';
+      head.onclick = function () { item.classList.toggle('open'); };
+      var body = document.createElement('div'); body.className = 'cat-body';
+      cat.questions.forEach(function (q, qi) {
+        var bi = document.createElement('div'); bi.className = 'bq-item';
+        var bh = document.createElement('div'); bh.className = 'bq-head';
+        var tagsHtml = '';
+        (q.tags || []).forEach(function (t) {
+          tagsHtml += '<span class="bq-tag' + (t === '高频' ? ' hot' : '') + '">' + esc(t) + '</span>';
+        });
+        bh.innerHTML = '<span class="bq-idx">' + (qi + 1) + '</span>'
+          + '<div style="flex:1"><div class="bq-q">' + esc(q.q) + '</div>'
+          + (tagsHtml ? '<div class="bq-tags">' + tagsHtml + '</div>' : '') + '</div>'
+          + '<span class="bq-reveal">显示答案 ▾</span>';
+        bh.onclick = function () {
+          bi.classList.toggle('open');
+          var rv = bh.querySelector('.bq-reveal');
+          rv.textContent = bi.classList.contains('open') ? '收起答案 ▴' : '显示答案 ▾';
+        };
+        var ans = document.createElement('div'); ans.className = 'bq-ans detail-markdown';
+        ans.innerHTML = BD.renderMarkdown(q.a);
+        bi.appendChild(bh); bi.appendChild(ans);
+        body.appendChild(bi);
+      });
+      item.appendChild(head); item.appendChild(body);
+      list.appendChild(item);
+    });
+  }
+
+  function randomQuestion() {
+    var bank = IV_BANK;
+    if (!bank || !bank.categories.length) { toast('题库未加载'); return; }
+    var pool = [];
+    bank.categories.forEach(function (c) {
+      c.questions.forEach(function (q) { pool.push({ cat: c.name, q: q }); });
+    });
+    var pick = pool[Math.floor(Math.random() * pool.length)];
+    var list = $('bankList');
+    var items = list.querySelectorAll('.bq-item');
+    var target = null;
+    for (var i = 0; i < items.length; i++) {
+      var qEl = items[i].querySelector('.bq-q');
+      if (qEl && qEl.textContent === pick.q.q) { target = items[i]; break; }
+    }
+    if (target) {
+      var catItem = target.closest ? target.closest('.cat-item') : null;
+      if (catItem) catItem.classList.add('open');
+      target.classList.add('open');
+      var rv = target.querySelector('.bq-reveal');
+      if (rv) rv.textContent = '收起答案 ▴';
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    toast('随机抽到【' + pick.cat + '】先自己作答，再展开对照');
+  }
+
+  /* 我的面试题卡片（含面试题类型的知识卡片） */
+  function renderMine() {
+    var rows = ROWS.filter(function (r) { return BD.hasType(r, '面试题'); });
+    var list = $('iqList'); list.innerHTML = '';
+    var empty = $('iqEmpty'); empty.innerHTML = '';
+    if (!rows.length) {
+      empty.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg><div>暂无面试题卡片<br>卡片库中勾选「面试题」类型的知识卡片会收录在这里</div></div>';
+      return;
+    }
+    rows.forEach(function (r, idx) {
+      var item = document.createElement('div'); item.className = 'iq-item';
+      var head = document.createElement('div'); head.className = 'iq-head';
+      var idxEl = document.createElement('span'); idxEl.className = 'iq-idx'; idxEl.textContent = (idx + 1);
+      var q = document.createElement('div'); q.className = 'iq-q'; q.textContent = r['名称'];
+      var st = document.createElement('span'); st.className = 'iq-stack'; st.textContent = r['技术栈'] || '未分类';
+      var chev = document.createElement('span'); chev.className = 'iq-chev';
+      chev.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+      head.appendChild(idxEl); head.appendChild(q); head.appendChild(st); head.appendChild(chev);
+      var body = document.createElement('div'); body.className = 'iq-body';
+      body.innerHTML = (r['结构图'] ? '<div class="detail-diagram"><div class="dg-cap">📐 结构示意</div>' + r['结构图'] + '</div>' : '')
+        + '<div class="detail-markdown">' + BD.renderMarkdown(r['详细内容']) + '</div>';
+      var acts = document.createElement('div'); acts.className = 'iq-actions';
+      var lvBtn = document.createElement('a'); lvBtn.className = 'btn-ghost';
+      lvBtn.innerHTML = '查看完整卡片 →';
+      lvBtn.href = BD.cardUrl(r._id);
+      var doneBtn = document.createElement('button'); doneBtn.className = 'btn-done';
+      doneBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>完成复习';
+      doneBtn.onclick = function () { BD.completeReview(r); renderMine(); };
+      acts.appendChild(lvBtn); acts.appendChild(doneBtn);
+      body.appendChild(acts);
+      head.onclick = function () { item.classList.toggle('open'); };
+      item.appendChild(head); item.appendChild(body);
+      list.appendChild(item);
+    });
+  }
+
+  function switchIvView(v) {
+    $('subBank').classList.toggle('on', v === 'bank');
+    $('subMine').classList.toggle('on', v === 'mine');
+    $('ivBank').classList.toggle('hidden', v !== 'bank');
+    $('ivMine').classList.toggle('hidden', v !== 'mine');
+  }
+
+  window.switchIvView = switchIvView;
+  window.randomQuestion = randomQuestion;
+  window.addEventListener('DOMContentLoaded', init);
+})();
+</script>
+</body>
+</html>
