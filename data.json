@@ -1180,5 +1180,35 @@
   "reviewCount": 0,
   "lastReview": "",
   "nextReview": "2026-09-04"
+ },
+ {
+  "id": "dolphinscheduler-fault-tolerance-alert",
+  "name": "DolphinScheduler 任务容错与告警插件实战",
+  "stack": "数仓与调度",
+  "types": [
+   "原理",
+   "使用方法",
+   "面试题"
+  ],
+  "level": "待学习",
+  "content": "### 核心原理\nDolphinScheduler 采用 **Master-Worker 分离架构**，各组件职责清晰：\n\n- **API Server**：接收前端与 OpenAPI 请求，负责权限校验与工作流实例化。\n- **Master Server**：DAG 切分、任务调度、容错恢复、告警触发；多 Master 通过 ZooKeeper 选主，实现 **无状态水平扩展**。\n- **Worker Server**：实际执行具体任务（Shell / SQL / Spark / Flink / Python 等），定期向 Master 上报心跳。\n- **Alert Server**：独立的告警服务，采用插件化设计，内置邮件、钉钉、企业微信、飞书、HTTP 等通道。\n- **Registry Center（ZooKeeper）**：服务注册发现、分布式锁、Master 选主。\n- **DB（MySQL/PostgreSQL）**：持久化项目、资源、工作流定义、任务实例与状态。\n\n### 容错机制\n1. **Master 容错**：某 Master 宕机后，ZK 临时节点消失，其他 Master 接管其未完成的工作流实例，继续调度。\n2. **Worker 容错**：Worker 心跳超时（默认 60s）后，Master 将该 Worker 上正在运行的任务标记为失败，并按策略重试或终止。\n3. **任务失败策略**：支持「失败重试（指定次数/间隔）」、「失败继续」、「结束」。\n4. **依赖失败处理**：下游任务根据失败策略阻塞、取消或继续执行。\n\n### 使用方法：自定义钉钉告警插件\n```java\npublic class DingTalkAlertChannel implements AlertChannel {\n    @Override\n    public AlertResult process(AlertInfo info) {\n        String title = info.getTitle();\n        String content = info.getContent();\n        String webhook = info.getAlertData().getAlertParams();\n        HttpUtil.postJson(webhook, buildMarkdown(title, content));\n        return AlertResult.success(\"钉钉告警发送成功\");\n    }\n}\n```\n配置 `alert-server/conf/alert.properties` 启用插件后，在工作流定义中选择告警组即可。\n\n### 面试高频题\n**Q1：DolphinScheduler 相比 Airflow/Azkaban 的核心优势是什么？**\nA：去中心化的 Master/Worker 设计让 Master 无状态可水平扩展；内置任务容错、告警插件、资源中心与数据血缘（3.x）；国人主导，中文文档与社区支持更完善。\n\n**Q2：Master 宕机后任务会不会丢失？**\nA：不会。工作流实例与任务状态持久化到 DB，其他 Master 通过 ZK 感知故障后接管并恢复未完成任务。\n\n**Q3：如何防止同一任务被重复调度？**\nA：Master 对同一工作流实例使用 ZK 分布式锁，确保同一时间只有一个 Master 调度；任务状态机从提交→运行→成功/失败不可逆。",
+  "reviewCount": 0,
+  "lastReview": "",
+  "nextReview": "2026-09-05"
+ },
+ {
+  "id": "clickhouse-replacingmergetree-deduplication",
+  "name": "ClickHouse ReplacingMergeTree 去重与版本控制",
+  "stack": "ClickHouse",
+  "types": [
+   "原理",
+   "使用方法",
+   "面试题"
+  ],
+  "level": "待学习",
+  "content": "### 核心原理\nReplacingMergeTree 在 MergeTree 基础上增加了**后台去重**能力：\n\n- 写入时**不立即去重**，数据按 `ORDER BY` 键分区排序后落盘。\n- 后台合并（Merge）同分区、同排序键的 part 时，只保留**版本号最大**的那一行；未指定版本列则保留同一批次中最后写入的行。\n- 版本列通过引擎参数指定：`ENGINE = ReplacingMergeTree(ver)`，常用类型为 `UInt64` 或 `DateTime`。\n\n### 使用注意\n- 查询时若未加 `FINAL`，可能返回重复数据，因为去重是异步的。\n- `FINAL` 会增加查询开销；大数据量建议先用 `OPTIMIZE TABLE ... FINAL` 强制合并，或用 `argMax(col, ver)` 聚合取最新。\n- 适合需要**最终一致性去重**的场景：用户余额快照、订单最新状态、CDC 同步后的镜像。\n\n### 核心代码\n```sql\n-- 建表：order_id 为排序键，update_time 为版本列\nCREATE TABLE orders_local (\n    order_id UInt64,\n    user_id UInt64,\n    status String,\n    amount Decimal(18,2),\n    update_time DateTime\n) ENGINE = ReplacingMergeTree(update_time)\nORDER BY order_id\nPARTITION BY toYYYYMM(update_time);\n\n-- 写入重复数据\nINSERT INTO orders_local VALUES\n(1001, 1, 'created', 99.00, '2026-09-01 10:00:00'),\n(1001, 1, 'paid',    99.00, '2026-09-01 11:00:00');\n\n-- 查询时强制去重\nSELECT * FROM orders_local FINAL WHERE order_id = 1001;\n\n-- 或按版本列聚合取最新\nSELECT order_id,\n       argMax(status, update_time) AS status,\n       argMax(amount, update_time) AS amount\nFROM orders_local\nWHERE order_id = 1001\nGROUP BY order_id;\n```\n\n### 面试高频题\n**Q1：ReplacingMergeTree 能否保证查询结果无重复？**\nA：默认不能保证。去重在后台合并时异步进行；查询需加 `FINAL` 或手动按版本列聚合，才能得到去重后结果。\n\n**Q2：版本列不指定会怎样？**\nA：同一排序键的多行合并时，保留**最后写入**的行（按 part 内的物理顺序），语义不稳定，生产环境务必显式指定版本列。\n\n**Q3：与 CollapsingMergeTree 的区别？**\nA：ReplacingMergeTree 通过版本列直接保留最新行；CollapsingMergeTree 需要写入 `+1`/`-1` 标记行，合并时抵消旧数据，适合明确表达增删改语义的场景。",
+  "reviewCount": 0,
+  "lastReview": "",
+  "nextReview": "2026-09-05"
  }
 ]
