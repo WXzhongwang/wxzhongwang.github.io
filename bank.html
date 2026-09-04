@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>中间件题库 · zhongwang 的大数据宝典</title>
+<!-- 中间件题库页：点击中间件展开知识点清单，点击知识点直达 card.html 详解 -->
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+
+<header>
+  <div class="hd-inner">
+    <div class="hd-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+      </svg>
+    </div>
+    <div>
+      <div class="hd-title">zhongwang 的大数据宝典</div>
+      <div class="hd-sub">中间件题库</div>
+    </div>
+    <div class="hd-right">
+      <span class="sync-pill"><span class="sync-dot" id="syncDot"></span><span id="syncText">加载中</span></span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- 顶部页面导航（PC） -->
+  <nav class="tabs">
+    <a class="tab" href="index.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+      知识卡片库
+    </a>
+    <a class="tab" href="interview.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+      面试专题
+    </a>
+    <a class="tab" href="stats.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+      学习统计
+    </a>
+    <a class="tab" href="algo.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 20H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10"></path><path d="M10 20v-6h6v6"></path><path d="M22 22l-5-5"></path><circle cx="17.5" cy="17.5" r="3.5"></circle></svg>
+      算法刷题
+    </a>
+    <a class="tab on" href="bank.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+      中间件题库
+    </a>
+  </nav>
+
+  <div class="bank-grid" id="bankGrid"></div>
+</div>
+
+<!-- 底部移动端导航 -->
+<nav class="bottom-nav">
+  <a class="bn-item" href="index.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+    卡片库
+  </a>
+  <a class="bn-item" href="interview.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+    面试专题
+  </a>
+  <a class="bn-item" href="stats.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+    统计
+  </a>
+  <a class="bn-item" href="algo.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 20H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10"></path><path d="M10 20v-6h6v6"></path><path d="M22 22l-5-5"></path><circle cx="17.5" cy="17.5" r="3.5"></circle></svg>
+    算法
+  </a>
+  <a class="bn-item on" href="bank.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+    题库
+  </a>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script src="assets/app.js"></script>
+<script>
+(function () {
+  var $ = BD.$, esc = BD.esc;
+
+  var BANK_MODULES = [
+    { name: 'Hadoop', icon: 'H', color: '#e97', desc: '分布式存储与计算基石（HDFS/YARN/MapReduce/ZK）', topics: [
+      { t: 'HDFS 架构与读写流程', d: 'NameNode/DataNode 角色分工、读写链路、机架感知', card: '0PpoJou9NYBnUCAICET1pA' },
+      { t: 'HDFS 写入流程与副本放置策略', d: 'Pipeline 写入、副本 2 副本本机架 1 跨机架', card: 'z56UxRmtMyhixEf4bE7ojg' },
+      { t: 'HDFS 小文件问题与治理', d: 'NameNode 内存压力、合并方案 SequenceFile/HAR', card: 'pMBgBkhavewNpF0kuJdUpW' },
+      { t: 'YARN 资源调度器详解', d: 'Capacity/Fair/FIFO 调度器对比、资源抢占', card: 'mVBwsMkTiX8GRzirKU728v' },
+      { t: 'MapReduce 原理与 WordCount 实战', d: 'Map/Reduce/Combiner/Partitioner 全流程', card: 'nls5CQodTObckjnn4qKxud' },
+      { t: 'Hadoop 3.x 新特性', d: '纠删码、NameNode 联邦、多级缓存', card: 'HdUDlRtBKt0UAfwH1Au5X2' },
+      { t: 'ZooKeeper 分布式协调原理', d: 'ZAB 协议、Watcher 机制、分布式锁实现', card: 'ZRC3az5RGDVjPVhb9xBUAa' }
+    ] },
+    { name: 'Spark', icon: 'S', color: '#e2572b', desc: '内存计算引擎（Core/SQL/Streaming）', topics: [
+      { t: 'Spark Core RDD 原理', d: 'RDD 血缘、宽窄依赖、算子分类', card: '5SrKCOwumUOxXMRzRRZSX3' },
+      { t: 'Spark 运行架构与任务调度', d: 'Driver/Executor/Master-Worker、DAG 切分 Stage', card: 'GSu1zZ93ksMbRr26NYi7I0' },
+      { t: 'Spark Shuffle 原理与优化', d: 'Hash/Sort/Bypass 三种机制、参数调优', card: 'qTUMlaeNVnghaExATh5Ax2' },
+      { t: 'Spark SQL 与 Catalyst 优化器', d: '解析/优化/物理计划、RBO/CBO 规则', card: 'iWlapMBbrj9FMnZkJrMzcb' },
+      { t: 'Spark 内存模型与统一内存管理', d: 'Execution/Storage/统一内存动态调整', card: 'spark-memory-model' },
+      { t: 'Spark 数据倾斜治理', d: '加盐/两阶段聚合/广播 Join 方案', card: 'q1zNGaQNWy4dwe9f4NHhf2' },
+      { t: 'Spark 调优实战', d: '并行度、序列化、cache 策略、GC 调优', card: 'e0PrpOINAcQU23iBrXcFPp' },
+      { t: 'Spark Structured Streaming 流处理', d: '微批模型、EventTime、Watermark、状态存储', card: 'spark-structured-streaming' }
+    ] },
+    { name: 'Flink', icon: 'F', color: '#e65100', desc: '流批一体实时计算引擎', topics: [
+      { t: 'Flink 核心概念与架构', d: 'JobManager/TaskManager/Slot、DataStream API', card: 'K5tikDpiEji4U6uxLizX5X' },
+      { t: 'Flink 状态管理与 Checkpoint', d: 'Keyed/Operator State、RocksDB 后端', card: 'CYp6jLShogRp4Hamfzlhcc' },
+      { t: 'Flink Window 机制详解', d: '滚动/滑动/会话窗口、EventTime/ProcessTime', card: 'EwysXZ3hTHBsChtqAVjFck' },
+      { t: 'Flink Checkpoint 与 Exactly-Once', d: 'Barrier 对齐、两阶段提交 Sink', card: 'NVYIgq9NAO8i8shLbKjdv8' },
+      { t: 'Flink 反压机制与性能诊断', d: 'Credit-Based 流控、Web UI 反压指标、治理方案', card: 'flink-backpressure-diagnosis' },
+      { t: 'Flink SQL 实战', d: '动态表、时间属性、Window TVF、Retract 流', card: 'RgkgLxbdp266FQiRyEUbH7' },
+      { t: 'Flink CEP 复杂事件处理实战', d: 'Pattern 定义、超时处理、检测状态机', card: 'flink-cep-complex-event-processing' }
+    ] },
+    { name: 'Kafka', icon: 'K', color: '#23880', desc: '高吞吐分布式消息队列（含 Pulsar/RocketMQ）', topics: [
+      { t: 'Kafka 架构与高吞吐原理', d: 'Topic/Partition、顺序写、零拷贝、批量', card: 'Yspa5py14czJtYM4Ly7nH5' },
+      { t: 'Kafka 消息可靠性三要素', d: 'Producer ACK、Broker 副本、Consumer 提交', card: 'BOCoi4L5ECzyXkUiBN4gX3' },
+      { t: 'Kafka 消费者组与 Rebalance', d: '分区分配策略、Rebalance 触发与避免', card: 'ayscxh4qfZbVqk55Sd5pAG' },
+      { t: 'Kafka ISR 机制与副本同步', d: 'LEO/High Watermark、ISR 收缩与 Leader 选举', card: 'kafka-isr-replica-sync' },
+      { t: 'Kafka Exactly-Once 与幂等', d: '幂等生产者、事务、Read Committed', card: 'lW0AZkmXX5kSlpH69kjXTq' },
+      { t: 'Apache Pulsar 架构与优势', d: '存算分离、BookKeeper、分层存储', card: 'aJYNybLkVHl3CBDpdPIRLb' },
+      { t: 'RocketMQ 核心概念', d: 'NameServer/CommitLog/消息重试与事务', card: 'pP8qQXOqLy4AZGqr6TbGLl' }
+    ] },
+    { name: 'Hive', icon: 'H', color: '#f9a825', desc: '数据仓库 SQL 引擎', topics: [
+      { t: 'Hive 架构与执行流程', d: 'HiveServer2/Metastore/Driver 编译流程', card: 'piINQ89RgP0FmbhWaIUreN' },
+      { t: 'Hive 数据倾斜排查与优化', d: '倾斜定位、GroupBy/SkewJoin 参数、Map Join', card: 'ATbKLZUaMuFnkw6s71b1Wi' },
+      { t: 'Hive 分区与分桶设计实战', d: '静态/动态分区、分桶原理与 Map-Side Join', card: 'hive-partition-bucket-design' },
+      { t: 'Hive SQL 优化实战', d: 'CBO、向量化、并行执行、分区裁剪', card: '6hBG22IXPCib8ZFNZu9QXs' },
+      { t: 'Hive 常用函数速查手册', d: '窗口函数/UDTF/日期与字符串函数', card: 'jTpsaLRkFBmLrBA65HgwTa' }
+    ] },
+    { name: 'HBase', icon: 'H', color: '#556b2f', desc: '分布式列式 NoSQL 数据库', topics: [
+      { t: 'HBase 架构与数据模型', d: 'Region/Store/MemStore、LSM-Tree、读写流程', card: 'EWZvXrH6Pe4O3Eh05vIMaL' },
+      { t: 'HBase RowKey 设计最佳实践', d: '避免热点、散列/反转/加盐策略', card: '3Aq1vJj4D3fps9AhnQe9Id' },
+      { t: 'HBase Compaction 与读写放大', d: 'Minor/Major Compaction、LSM 合并策略', card: 'hbase-compaction-read-write-amplification' }
+    ] },
+    { name: 'ClickHouse', icon: 'C', color: '#ffcc00', desc: 'OLAP 列式分析数据库', topics: [
+      { t: 'ClickHouse 架构与 MergeTree 原理', d: '列存压缩、分区/主键/稀疏索引', card: 'C6B1kfvczWeQOvQDriSGfI' },
+      { t: 'ClickHouse 查询优化实战', d: 'PREWHERE、采样、物化视图、跳数索引', card: 'rqpFoJbVswTeOaS4Kr0JnA' }
+    ] },
+    { name: 'Doris', icon: 'D', color: '#00bcd4', desc: 'MPP 实时分析型数据库', topics: [
+      { t: 'Doris 架构与数据模型', d: 'FE/BE、Duplicate/Agg/Unique 模型', card: 'u1k0Ta3ALHsbcNGK1Ju7i5' },
+      { t: 'Doris 导入导出与查询实战', d: 'Stream Load/Broker Load、分桶与 Colocate', card: 'arRCYopaXKqS1ANilcEFMH' }
+    ] },
+    { name: '数据湖', icon: '湖', color: '#0288d1', desc: 'Iceberg / Hudi / Delta 表格式', topics: [
+      { t: '数据湖 vs 数据仓库', d: 'Schema on Read、ACID 湖仓一体演进', card: 'pUyw6wxE4EyC0gMzFCOD79' },
+      { t: 'Apache Iceberg 架构与核心特性', d: '快照/元数据分层、Hidden Partitioning', card: 'XhjCsCiAIxIcyvEPF0KaKe' },
+      { t: 'Apache Hudi 核心特性', d: 'COW/MOR、增量查询、Timeline', card: 'GiFN4FnElmWN6FoDFLZlSK' },
+      { t: 'Delta Lake 核心概念', d: '事务日志、Optimize/Z-Order', card: 'KYjZ2dBfiEo1BchI6L8v5y' }
+    ] },
+    { name: '数仓与调度', icon: '仓', color: '#7b1fa2', desc: '分层建模 / DolphinScheduler / DataX', topics: [
+      { t: '数仓分层设计规范', d: 'ODS/DWD/DWS/ADS 分层职责与命名', card: '76V5C48unio29E6uH0JGTb' },
+      { t: '维度建模：星型模型与雪花模型', d: '事实表/维度表、缓慢变化维 SCD', card: 'pNMDnDrCgWPf9P1KSHoUlL' },
+      { t: '离线数仓架构方案', d: '数据源→ODS→ADS 全链路设计', card: 'Oou9kRrMPSL0SnCgE9lsnd' },
+      { t: '实时数仓架构方案', d: 'Kafka→Flink→OLAP Lambda/Kappa 架构', card: 'e5kogFouivgZTkxXNNwHe4' },
+      { t: '数据同步工具：DataX / SeaTunnel / Sqoop', d: '分片并行、限速、增量同步策略', card: '5mdLv1zDE1TOvwbeJDXBSA' },
+      { t: '调度系统选型：DolphinScheduler / Airflow / Azkaban', d: 'DAG 依赖、补数、告警与容错', card: 'kE6YGg5T1kbag3yN6RslbX' }
+    ] },
+    { name: '检索与查询', icon: 'ES', color: '#e91e63', desc: 'Elasticsearch / Presto / Trino', topics: [
+      { t: 'Elasticsearch 核心原理', d: '倒排索引、分片/副本、Refresh/Translog', card: 'fpM4UPwh17LpvdQJwH3ClZ' },
+      { t: 'Presto/Trino 原理与使用', d: 'Coordinator/Worker、内存计算、Connector', card: 'presto-trino-overview' }
+    ] },
+    { name: '图数据库', icon: '图', color: '#00897b', desc: 'Neo4j / NebulaGraph / JanusGraph / ArangoDB', topics: [
+      { t: 'Neo4j 架构与 Cypher 查询实战', d: '原生图存储、Cypher 模式匹配、Causal 集群', card: 'neo4j-architecture-cypher' },
+      { t: 'NebulaGraph 分布式图数据库原理', d: '存算分离三层架构、nGQL、VID 设计', card: 'nebulagraph-distributed-architecture' },
+      { t: 'JanusGraph 架构与 Gremlin 查询实战', d: '存储/索引分离、复合/混合索引', card: 'janusgraph-architecture-gremlin' },
+      { t: 'ArangoDB 架构与多模型原理', d: '文档/图/KV 三模型一体、Coordinator 集群', card: 'arangodb-multi-model-architecture' },
+      { t: 'ArangoDB AQL 查询与图遍历实战', d: 'FOR/FILTER/RETURN、图遍历与 PRUNE', card: 'arangodb-aql-graph-traversal' }
+    ] },
+    { name: '算法', icon: 'LC', color: '#f57c00', desc: 'LeetCode Hot 100 高频算法题', topics: [
+      { t: '两数之和与哈希表应用', d: '空间换时间、三数之和排序+双指针', card: 'leetcode-two-sum-hash' },
+      { t: '反转链表与链表核心技巧', d: '三指针迭代、快慢指针判环', card: 'leetcode-reverse-linked-list' },
+      { t: '二叉树遍历与递归框架', d: '前中后序、层序 BFS、Morris O(1) 空间', card: 'leetcode-binary-tree-traversal' },
+      { t: '动态规划入门：爬楼梯与 LIS', d: '状态定义与转移方程、滚动数组优化', card: 'leetcode-dp-intro' },
+      { t: '双指针技巧：盛水容器与三数之和', d: '对撞指针、去重技巧', card: 'leetcode-two-pointers' },
+      { t: '链表进阶专题（12题）', d: '合并K个链表、K个一组翻转、回文链表', card: 'leetcode-linked-list-advanced' },
+      { t: '二叉树进阶专题（12题）', d: 'LCA、最大路径和、重建二叉树、前缀和', card: 'leetcode-binary-tree-advanced' },
+      { t: '动态规划进阶专题（15题）', d: '01/完全背包、LCS、编辑距离、树形DP', card: 'leetcode-dp-advanced' },
+      { t: '回溯与DFS专题（14题）', d: '全排列、N皇后、子集去重、单词搜索', card: 'leetcode-backtracking-dfs' },
+      { t: '滑动窗口与字符串专题（14题）', d: '最小覆盖子串、单调栈、KMP、中心扩展', card: 'leetcode-sliding-window-string' },
+      { t: '栈与单调栈专题（10题）', d: '接雨水、柱状图最大矩形、计算器', card: 'leetcode-stack-monotonic' },
+      { t: '贪心算法专题（10题）', d: '跳跃游戏、股票买卖系列、区间贪心', card: 'leetcode-greedy' },
+      { t: '图论BFS与DFS专题（12题）', d: '岛屿数量、拓扑排序、并查集、多源BFS', card: 'leetcode-graph-bfs-dfs' },
+      { t: '排序与二分查找专题（10题）', d: '旋转数组、快速选择、摩尔投票', card: 'leetcode-sort-binary-search' },
+      { t: '高级数据结构专题（10题）', d: 'Trie、LRU/LFU、双堆中位数', card: 'leetcode-advanced-ds' }
+    ] },
+    { name: '基础与综合', icon: '基', color: '#546e7a', desc: 'Linux / Java / 技术选型 / 全景图', topics: [
+      { t: 'Linux 与 Shell 大数据必备技能', d: '常用命令、三剑客 awk/sed/grep、性能排查', card: '1iFECrgZCLOIBBTXTsYfv5' },
+      { t: 'Java 大数据开发必备基础', d: 'JVM 内存模型、GC、集合与并发', card: 'cKujhOXUEN2BzwTdWXQdqN' },
+      { t: '大数据技术全景图', d: '采集→存储→计算→分析→调度全景', card: '1cWXtCG1Pjv238XsHSqCAu' },
+      { t: '大数据学习路线图（由浅入深）', d: '从 Hadoop 入门到实时数仓进阶', card: 'GG5pjLPT82vURw9t1czy1E' },
+      { t: 'Spark vs Flink 对比', d: '流批模型、状态、生态对比选型', card: 'cNJwGk7QLTgVfqzBjCKCDi' },
+      { t: '消息队列选型对比', d: 'Kafka/Pulsar/RocketMQ 横向对比', card: 'GnvAfPqlHVtDPtSn4b4Gu8' },
+      { t: '大数据开源项目全景图谱', d: 'Apache 生态一览与学习优先级', card: 'Mj31pK7BD27NiWeag75YDu' },
+      { t: '开源项目选型指南', d: '社区活跃度、生产验证、人才储备', card: '9HbpZevt96VHhmsW7Kt0eh' }
+    ] }
+  ];
+
+  function init() {
+    renderBankModules();
+    /* 数据只用于同步状态提示 */
+    BD.loadRows(function (rows, ok, count) { BD.setSync(ok, count); });
+  }
+
+  function renderBankModules() {
+    var grid = $('bankGrid');
+    grid.innerHTML = '';
+    BANK_MODULES.forEach(function (m) {
+      var mod = document.createElement('div');
+      mod.className = 'bk-mod';
+      var head = document.createElement('div');
+      head.className = 'bk-mod-head';
+      head.innerHTML = '<div class="bk-mod-icon" style="background:' + m.color + '">' + esc(m.icon) + '</div>'
+        + '<div class="bk-mod-info"><div class="bk-mod-name">' + esc(m.name) + '</div>'
+        + '<div class="bk-mod-desc">' + esc(m.desc) + '</div></div>'
+        + '<div class="bk-mod-side"><div class="bk-mod-count"><b>' + m.topics.length + '</b> 个知识点</div></div>'
+        + '<span class="bk-mod-chev"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>';
+      head.onclick = function () { mod.classList.toggle('open'); };
+      var body = document.createElement('div');
+      body.className = 'bk-mod-body';
+      m.topics.forEach(function (tp, ti) {
+        var it = document.createElement('div');
+        it.className = 'bk-topic';
+        it.innerHTML = '<span class="bk-topic-idx">' + (ti + 1) + '</span>'
+          + '<div class="bk-topic-info"><div class="bk-topic-name">' + esc(tp.t) + '</div>'
+          + (tp.d ? '<div class="bk-topic-desc">' + esc(tp.d) + '</div>' : '') + '</div>'
+          + (tp.card ? '<span class="bk-topic-link">查看卡片 →</span>' : '');
+        it.onclick = function () { if (tp.card) location.href = BD.cardUrl(tp.card); };
+        body.appendChild(it);
+      });
+      mod.appendChild(head);
+      mod.appendChild(body);
+      grid.appendChild(mod);
+    });
+  }
+
+  window.addEventListener('DOMContentLoaded', init);
+})();
+</script>
+</body>
+</html>
