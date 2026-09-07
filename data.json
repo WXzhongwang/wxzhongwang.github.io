@@ -1210,5 +1210,37 @@
   "reviewCount": 0,
   "lastReview": "",
   "nextReview": "2026-09-05"
+ },
+ {
+  "id": "doris-bitmap-deduplication",
+  "name": "Doris Bitmap 索引与精确去重实战",
+  "stack": "Doris",
+  "types": [
+   "原理",
+   "使用方法",
+   "核心代码",
+   "面试题"
+  ],
+  "content": "## 核心原理\n\nApache Doris 在大数据分析场景中对高基数精确去重（UV、去重订单号）一直是个痛点。Doris 通过 **Bitmap（位图）类型 + Bitmap 索引 + AGG 表模型** 将去重计算从 HashSet 改为按位或/按位与，内存占用和查询性能均有数量级提升。\n\n### 1. Bitmap 数据类型\n\nDoris 提供原生 `BITMAP` 类型，内部使用 **Roaring Bitmap** 实现，可高效压缩 32 位整型集合，支持交并差、基数统计等操作。典型用法：\n\n- 将用户 ID、设备 ID 等维度转成 64/32 位整数；\n- 在 AGG 模型中使用 `BITMAP_UNION()` 聚合函数做增量合并；\n- 查询时用 `BITMAP_UNION_COUNT()` 输出去重基数。\n\n### 2. Bitmap 索引\n\n对低基数过滤列（性别、城市、是否会员）可以建 **Bitmap Index**，加速 `=` / `IN` 等点查条件。Doris 会为列的每个不同值维护一个位图，标记哪些行包含该值，谓词下推时直接做位图 AND/OR，避免全表扫描。\n\n### 3. 精确去重三种方案对比\n\n| 方案 | 原理 | 适用场景 | 特点 |\n|------|------|----------|------|\n| COUNT(DISTINCT) | HashSet 去重 | 小数据量、即席查询 | 慢、内存大、不支持增量 Rollup |\n| Bitmap | Roaring Bitmap | 用户/设备 ID 等可转整型的维度 | 快、省内存、支持预聚合 |\n| HyperLogLog (HLL) | 概率估计算法 | 容忍 1~2% 误差的海量 UV | 更快、更省空间，但不精确 |\n\n## 使用方法与核心代码\n\n### 建表：AGG 模型 + BITMAP 列\n\n```sql\nCREATE TABLE user_log_bitmap (\n    dt          DATE,\n    city        VARCHAR(50),\n    user_id     BITMAP BITMAP_UNION,   -- 必须是 BITMAP 类型，聚合函数 BITMAP_UNION\n    order_id    BIGINT REPLACE_IF_NOT_NULL NULL\n)\nAGGREGATE KEY(dt, city)\nPARTITION BY RANGE(dt) (\n    PARTITION p202601 VALUES LESS THAN (\"2026-02-01\")\n)\nDISTRIBUTED BY HASH(city) BUCKETS 4\nPROPERTIES (\"replication_num\" = \"1\");\n```\n\n### 导入数据：使用 to_bitmap()\n\n```sql\nINSERT INTO user_log_bitmap\nSELECT dt, city, BITMAP_UNION(to_bitmap(user_id)), NULL\nFROM raw_user_log\nGROUP BY dt, city;\n```\n\n> 注意：`to_bitmap()` 只接受 `BIGINT` / `INT` 类型。如果业务 ID 是字符串，需要提前用字典、Hash 或全局 ID 服务映射为整数。\n\n### 查询：精确去重\n\n```sql\n-- 按城市统计每日 UV\nSELECT dt, city, BITMAP_UNION_COUNT(user_id) AS uv\nFROM user_log_bitmap\nWHERE dt = '2026-01-15'\nGROUP BY dt, city;\n\n-- 跨城市合并 UV\nSELECT dt, BITMAP_UNION_COUNT(user_id) AS total_uv\nFROM user_log_bitmap\nWHERE dt = '2026-01-15';\n```\n\n### Bitmap 索引\n\n```sql\nCREATE TABLE example_bitmap_idx (\n    user_id BIGINT,\n    gender  TINYINT,\n    city    VARCHAR(50),\n    INDEX idx_gender(gender) USING BITMAP\n)\nDUPLICATE KEY(user_id)\nDISTRIBUTED BY HASH(user_id) BUCKETS 4;\n```\n\n## 面试高频题与参考答案\n\n### Q1：Doris 精确去重为什么推荐 Bitmap 而不是 COUNT(DISTINCT)？\n\nA：`COUNT(DISTINCT)` 在内存中维护 HashSet，数据量大时容易 OOM，且无法利用 Rollup/物化视图做增量预聚合；而 `BITMAP_UNION` 底层是 Roaring Bitmap，位图 OR 运算极快，并且可以在导入阶段就完成聚合，查询时只需合并少量分片结果。\n\n### Q2：Bitmap 索引和 B+ 树/BloomFilter 索引有什么区别？\n\nA：Bitmap 索引以“值 -> 位图”的方式标记行号，最适合低基数、等值过滤列；B+ 树/ZoneMap 索引适合范围查询；BloomFilter 适合高基数等值过滤但返回的是“可能存在”，而 Bitmap 索引能精确命中行号，过滤后无需回表。\n\n### Q3：如果业务 ID 是字符串，还能直接用 Bitmap 吗？\n\nA：不能直接转。Doris `to_bitmap()` 只支持整数。常见做法：\n1. 维护一张全局字典表，把字符串 ID 映射为自增 INT；\n2. 使用 Hive/Spark 做 ETL 时统一生成全局 ID；\n3. 新版本 Doris 支持 `bitmap_from_string`/`bitmap_from_array`，但生产上仍以整数字典最稳定。",
+  "level": "待学习",
+  "reviewCount": 0,
+  "lastReview": "",
+  "nextReview": "2026-09-07"
+ },
+ {
+  "id": "hbase-read-write-tuning",
+  "name": "HBase 读写优化与 Region 管理实战",
+  "stack": "HBase",
+  "types": [
+   "原理",
+   "使用方法",
+   "核心代码",
+   "面试题"
+  ],
+  "content": "## 核心原理\n\nHBase 是面向列族、强一致性的分布式 KV 数据库，数据按 RowKey 字典序分布在多个 Region 上。读写性能的好坏往往取决于 **Region 数量、MemStore/BlockCache 命中率、Compaction 策略、RowKey 设计** 这四个维度。\n\n### 1. 写链路\n\n1. Client 先从 ZooKeeper 拿到 `hbase:meta` 表定位目标 RegionServer；\n2. 写请求先追加到 **WAL（HLog）**，保证持久化；\n3. 再写入对应 Region 的 **MemStore**（内存有序结构）；\n4. MemStore 超过阈值后刷写为磁盘上的 **HFile**；\n5. 多个小 HFile 通过 Compaction 合并成大文件，减少读放大。\n\n### 2. 读链路\n\n1. Client 定位 Region；\n2. 先查 **BlockCache**（读缓存），命中则直接返回；\n3. 未命中则读取 MemStore + HFile，合并时间戳最新的版本；\n4. HFile 内部有 BloomFilter、Block Index 加速 Key 查找。\n\n### 3. Region 分裂与合并\n\n- **Split**：Region 大小超过 `hbase.hregion.max.filesize` 时，RegionServer 会按 RowKey 中值将其拆成两个子 Region，由 Master 重新调度。\n- **Merge**：Region 过小（空表、历史分区过期）时可通过 `merge_region` 命令合并，减少元数据开销。\n- 预分区（Pre-splitting）可在建表时避免单 Region 热点。\n\n## 使用方法与核心代码\n\n### 建表时预分区\n\n```java\nAdmin admin = connection.getAdmin();\nTableName tableName = TableName.valueOf(\"order_event\");\nHTableDescriptor desc = new HTableDescriptor(tableName);\nHColumnDescriptor cf = new HColumnDescriptor(\"cf\");\ncf.setCompressionType(Compression.Algorithm.SNAPPY);\ndesc.addFamily(cf);\n\n// 按前缀 00~09 预分 10 个 Region，避免写入热点\nbyte[][] splitKeys = new byte[9][];\nfor (int i = 1; i <= 9; i++) {\n    splitKeys[i-1] = Bytes.toBytes(String.format(\"%02d\", i));\n}\nadmin.createTable(desc, splitKeys);\n```\n\n### 写优化：批量 Put + 关闭 WAL（谨慎）\n\n```java\nBufferedMutatorParams params = new BufferedMutatorParams(tableName)\n    .writeBufferSize(6 * 1024 * 1024)   // 6MB 写缓冲\n    .maxKeyValueSize(10 * 1024 * 1024);\nBufferedMutator mutator = connection.getBufferedMutator(params);\n\nfor (Order o : orders) {\n    Put put = new Put(Bytes.toBytes(o.getRowKey()));\n    put.addColumn(FAMILY, QUALIFIER, Bytes.toBytes(o.getJson()));\n    put.setDurability(Durability.SKIP_WAL); // 允许丢数据场景可跳过 WAL\n    mutator.mutate(put);\n}\nmutator.flush();\nmutator.close();\n```\n\n### 读优化：Scan 设置缓存与过滤器\n\n```java\nScan scan = new Scan();\nscan.withStartRow(Bytes.toBytes(\"20260101000000_user_\"));\nscan.withStopRow(Bytes.toBytes(\"20260102000000_user_\"));\nscan.setCaching(500);              // 每次 RPC 拉 500 行\nscan.setBatch(100);                // 每行最多返回 100 个 Cell\nscan.setCacheBlocks(true);         // 结果进 BlockCache\nscan.addColumn(FAMILY, QUALIFIER);\n\n// 前缀过滤器，减少无效扫描\nFilter prefix = new PrefixFilter(Bytes.toBytes(\"20260101\"));\nscan.setFilter(prefix);\n\nResultScanner scanner = table.getScanner(scan);\n```\n\n### Region 合并\n\n```shell\n# 合并相邻 Region，force 参数表示即使 Region 不在同一台机器也强制合并\nhbase shell\nmerge_region 'ENCODED_REGION_NAME_A', 'ENCODED_REGION_NAME_B', true\n```\n\n## 面试高频题与参考答案\n\n### Q1：HBase 写入数据先写 WAL 还是先写 MemStore？为什么？\n\nA：先写 WAL，再写 MemStore。WAL 是顺序写日志，用于 RegionServer 宕机后恢复未刷盘的内存数据；如果先写 MemStore 再写 WAL，一旦宕机会丢失内存中的最新数据。\n\n### Q2：HBase 读放大、写放大、Compaction 三者之间是什么关系？\n\nA：为了提升写入吞吐，HBase 把数据先写 MemStore 再刷成小 HFile，导致一次逻辑写入可能产生多次 HFile 重写，这就是写放大；多个 HFile 需要合并读取才能拿到最新版本，这就是读放大；Compaction 通过合并 HFile 减少文件数量来降低读放大，但合并过程会重写数据，又会引入新的写放大。生产上需要在 Major/Minor Compaction 策略和 SSD/HDD 成本之间做权衡。\n\n### Q3：什么情况下要做 Region 预分区？预分区过多会有什么副作用？\n\nA：当 RowKey 前缀容易集中（如时间戳升序）或表预计数据量很大时，应预先按前缀 Hash/拆分建多个 Region，避免单 Region 热点。但 Region 过多也会带来副作用：\n1. Master/RegionServer 元数据压力增大；\n2. MemStore 总内存被切分，单个 Region 的 Flush 频率变高，产生更多小 HFile；\n3. Compaction 调度更频繁，占用更多磁盘 I/O。通常建议单 Region 大小控制在 10~50GB。",
+  "level": "待学习",
+  "reviewCount": 0,
+  "lastReview": "",
+  "nextReview": "2026-09-07"
  }
 ]
