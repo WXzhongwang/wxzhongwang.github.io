@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>中间件题库 · zhongwang 的大数据宝典</title>
+<!-- 中间件题库二级页：展示某个中间件下的知识点清单，点击知识点跳 card.html 详解 -->
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+
+<header>
+  <div class="hd-inner">
+    <div class="hd-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+      </svg>
+    </div>
+    <div>
+      <div class="hd-title">zhongwang 的大数据宝典</div>
+      <div class="hd-sub">中间件题库</div>
+    </div>
+    <div class="hd-right">
+      <a class="hd-back" href="bank.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        返回题库
+      </a>
+      <span class="sync-pill"><span class="sync-dot" id="syncDot"></span><span id="syncText">加载中</span></span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- 顶部页面导航（PC） -->
+  <nav class="tabs">
+    <a class="tab" href="index.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+      知识卡片库
+    </a>
+    <a class="tab" href="interview.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+      面试专题
+    </a>
+    <a class="tab" href="stats.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+      学习统计
+    </a>
+    <a class="tab" href="algo.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 20H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10"></path><path d="M10 20v-6h6v6"></path><path d="M22 22l-5-5"></path><circle cx="17.5" cy="17.5" r="3.5"></circle></svg>
+      算法刷题
+    </a>
+    <a class="tab" href="bank.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+      中间件题库
+    </a>
+  </nav>
+
+  <div id="moduleHead"></div>
+  <div class="topic-list" id="topicList"></div>
+</div>
+
+<!-- 底部移动端导航 -->
+<nav class="bottom-nav">
+  <a class="bn-item" href="index.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+    卡片库
+  </a>
+  <a class="bn-item" href="interview.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+    面试专题
+  </a>
+  <a class="bn-item" href="stats.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+    统计
+  </a>
+  <a class="bn-item" href="algo.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 20H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10"></path><path d="M10 20v-6h6v6"></path><path d="M22 22l-5-5"></path><circle cx="17.5" cy="17.5" r="3.5"></circle></svg>
+    算法
+  </a>
+  <a class="bn-item on" href="bank.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+    题库
+  </a>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script src="assets/app.js"></script>
+<script>
+(function () {
+  var $ = BD.$, esc = BD.esc;
+
+  function getParam(name) {
+    var m = location.search.match(new RegExp('[?&]' + name + '=([^&#]*)'));
+    return m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : '';
+  }
+
+  function renderHead(m) {
+    var h = $('moduleHead');
+    h.innerHTML = '<div class="module-head">'
+      + '<div class="module-head-icon" style="background:' + m.color + '">' + esc(m.icon) + '</div>'
+      + '<div class="module-head-info">'
+      +   '<div class="module-head-name">' + esc(m.name) + '</div>'
+      +   '<div class="module-head-desc">' + esc(m.desc) + '</div>'
+      +   '<div class="module-head-meta">共 ' + m.topics.length + ' 个核心知识点</div>'
+      + '</div></div>';
+    document.title = m.name + ' · 中间件题库 · zhongwang 的大数据宝典';
+  }
+
+  function renderTopics(m) {
+    var list = $('topicList');
+    list.innerHTML = '';
+    m.topics.forEach(function (tp, ti) {
+      var it = document.createElement('a');
+      it.className = 'bk-topic';
+      it.href = tp.card ? BD.cardUrl(tp.card) : '#';
+      it.innerHTML = '<span class="bk-topic-idx">' + (ti + 1) + '</span>'
+        + '<div class="bk-topic-info"><div class="bk-topic-name">' + esc(tp.t) + '</div>'
+        + (tp.d ? '<div class="bk-topic-desc">' + esc(tp.d) + '</div>' : '')
+        + '</div>'
+        + '<span class="bk-topic-link">查看卡片 →</span>';
+      list.appendChild(it);
+    });
+  }
+
+  function renderNotFound() {
+    $('moduleHead').innerHTML = '<div class="empty-state">'
+      + '<div style="font-size:36px;margin-bottom:8px">⚠️</div>'
+      + '<div style="font-weight:700;color:var(--text);margin-bottom:4px">未找到该中间件</div>'
+      + '<div style="margin-bottom:14px">该中间件不存在或已被移除</div>'
+      + '<a class="hd-back" href="bank.html" style="background:var(--primary);color:#fff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polyline points="15 18 9 12 15 6"></polyline></svg>返回题库</a>'
+      + '</div>';
+    $('topicList').innerHTML = '';
+  }
+
+  function init() {
+    var slug = getParam('id');
+    var m = slug ? BD.findModule(slug) : null;
+    if (!m) { renderNotFound(); return; }
+    renderHead(m);
+    renderTopics(m);
+    /* 同步状态 */
+    BD.loadRows(function (rows, ok, count) { BD.setSync(ok, count); });
+  }
+
+  window.addEventListener('DOMContentLoaded', init);
+})();
+</script>
+</body>
+</html>
