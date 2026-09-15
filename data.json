@@ -1211,5 +1211,35 @@
   "reviewCount": 0,
   "lastReview": "",
   "nextReview": "2026-09-14"
+ },
+ {
+  "id": "iceberg-hidden-partitioning",
+  "name": "Iceberg 隐藏分区与分区进化",
+  "stack": "数据湖",
+  "types": [
+   "原理",
+   "使用方法",
+   "面试题"
+  ],
+  "content": "Iceberg 用**隐藏分区（Hidden Partitioning）**解决 Hive 分区表的最常见问题：分区字段必须显式写入目录路径，导致查询必须带 exact 分区条件，且改分区策略要重写全表。\n\n### 核心原理\n\n1. **分区与数据解耦**  \n   Hive 分区把分区值编码到 HDFS 路径（如 `/dt=2026-09-15/`），查询计划必须匹配路径；Iceberg 把分区信息存到元数据（Snapshot/Manifest），数据文件路径不再暴露分区值。\n\n2. **Partition Transform**  \n   建表时用 transform 函数定义分区，而不是直接拿原始列：\n   - `year(ts)` / `month(ts)` / `day(ts)` / `hour(ts)`：按时间粒度分区\n   - `bucket(n, col)`：按哈希分桶\n   - `truncate(l, col)`：按前缀截断\n   - `identity(col)`：与 Hive 行为一致（显式值）\n\n3. **分区进化（Partition Evolution）**  \n   业务需求变了可以直接 `ALTER TABLE ... ADD/DROP PARTITION FIELD`，老数据按老分区规则、新数据按新分区规则，**不需要重写历史数据**。元数据会保留多个 Partition Spec，查询时自动路由。\n\n### 使用方法\n\n```sql\n-- Spark SQL 建表：按天分区，同时按 user_id 分 16 个桶\nCREATE TABLE prod.db.events (\n  id BIGINT,\n  user_id STRING,\n  event_time TIMESTAMP,\n  payload STRING\n) USING iceberg\nPARTITIONED BY (days(event_time), bucket(16, user_id));\n\n-- 分区进化：新增小时级分区字段，旧数据仍按天查询，新数据可按小时裁剪\nALTER TABLE prod.db.events ADD PARTITION FIELD hours(event_time);\n\n-- 删除不再需要的分区字段\nALTER TABLE prod.db.events DROP PARTITION FIELD bucket(16, user_id);\n```\n\n```java\n// Flink 写入 Iceberg 隐藏分区表（事件时间分区）\nCREATE TABLE flink_events (\n  id BIGINT,\n  user_id STRING,\n  event_time TIMESTAMP(3),\n  PRIMARY KEY (id) NOT ENFORCED\n) WITH (\n  'connector' = 'iceberg',\n  'catalog-name' = 'prod',\n  'catalog-type' = 'hive',\n  'warehouse' = 'hdfs:///warehouse/iceberg',\n  'partitioning' = 'days(event_time),bucket(16,user_id)'\n);\n```\n\n### 面试高频题\n\n**Q1：Iceberg 隐藏分区相比 Hive 分区有什么优势？**  \nA：① 数据文件路径不再包含分区值，避免路径泄露与列值强绑定；② 查询时 Iceberg 根据元数据自动做分区裁剪，不需要用户写 `WHERE dt='2026-09-15'` 精确匹配；③ 支持分区进化，改分区策略不必重写全表；④ transform 分区对时间戳直接按天/小时取整，业务不需要额外维护 `dt` 列。\n\n**Q2：分区进化后，老数据还能被新查询正确裁剪吗？**  \nA：可以。Iceberg 元数据里保存了每个数据文件写入时对应的 Partition Spec ID，查询规划器会按该文件当时的分区规则做裁剪，因此新旧数据可以共存且都享受分区裁剪。\n\n**Q3：什么场景适合用 bucket 分区？**  \nA：适合高基数字段（如 user_id、device_id）的等值过滤或 join，把相同哈希值的数据聚集到同一分区，减少扫描量；但范围查询不适合 bucket，范围查询优先用 day/month/truncate 等有序 transform。",
+  "level": "待学习",
+  "reviewCount": 0,
+  "lastReview": "",
+  "nextReview": "2026-09-15"
+ },
+ {
+  "id": "iceberg-time-travel",
+  "name": "Iceberg 快照隔离与 Time-Travel 查询",
+  "stack": "数据湖",
+  "types": [
+   "原理",
+   "使用方法",
+   "面试题"
+  ],
+  "content": "Iceberg 把每次写入都保存为不可变的**快照（Snapshot）**，配合乐观并发控制实现 ACID，并支持基于快照的 Time-Travel 查询。\n\n### 核心原理\n\n1. **快照链**  \n   每次 `INSERT / UPDATE / DELETE / MERGE` 都会生成新快照，旧快照不会被覆盖。元数据文件以树状结构记录：\n   ```\n   Metadata.json → 当前快照列表 → ManifestList → Manifest → DataFile + DeleteFile\n   ```\n   读操作总是基于当前快照或指定快照，写操作生成新快照并原子替换根元数据指针。\n\n2. **乐观并发控制（Optimistic Concurrency Control）**  \n   多个写入者同时基于同一快照修改时，Iceberg 会校验冲突（如删除/更新的文件是否被他人修改），无冲突则提交新快照，有冲突则重试或失败。这比锁机制更适合湖上高并发追加。\n\n3. **隔离级别**  \n   - 读已提交：读取总发生在已提交快照上，不会读到未提交数据。\n   - 快照隔离：读操作持有快照，写操作不阻塞读。\n\n4. **快照清理**  \n   过期快照通过 `expire_snapshots` 回收，需配合 `remove_orphan_files` 清理孤立数据文件，否则历史文件会无限增长。\n\n### 使用方法\n\n```sql\n-- Spark SQL：查看快照历史\nSELECT * FROM prod.db.events.history;\n\n-- Time-Travel：按快照 ID 查询历史数据\nSELECT * FROM prod.db.events VERSION AS OF 8056116859186761386;\n\n-- Time-Travel：按时间戳查询\nSELECT * FROM prod.db.events TIMESTAMP AS OF '2026-09-14 00:00:00';\n\n-- 回滚到某个快照（生成新快照指向旧数据，不会物理删除）\nCALL prod.system.rollback_to_snapshot('db.events', 8056116859186761386);\n\n-- 设置保留策略并清理过期快照\nALTER TABLE prod.db.events SET TBLPROPERTIES (\n  'history.expire.max-snapshot-age-ms' = '86400000',\n  'history.expire.min-snapshots-to-keep' = '5'\n);\nCALL prod.system.expire_snapshots('db.events');\n```\n\n```java\n// Spark DataFrame API 按快照读取\nDataset<Row> df = spark.read()\n    .option(\"snapshot-id\", 8056116859186761386L)\n    .format(\"iceberg\")\n    .load(\"prod.db.events\");\n```\n\n### 面试高频题\n\n**Q1：Iceberg 如何实现 ACID？**  \nA：原子性靠快照切换（元数据文件原子替换）；一致性靠快照不可变与元数据树；隔离性靠乐观并发控制 + 快照隔离，读不阻塞写；持久性靠底层 HDFS/S3 存储保证。\n\n**Q2：Time-Travel 占用多少额外存储？**  \nA：仅新增或修改的数据文件会占用空间；未被任何快照引用的数据文件可在快照过期后删除。历史数据保留越久、更新越频繁，存储成本越高，需通过 `expire_snapshots` + `remove_orphan_files` 设置保留策略。\n\n**Q3：与 Delta Lake 的 Time-Travel 相比有什么区别？**  \nA：两者都基于快照，核心差异在元数据设计：Iceberg 用 Manifest 做文件级统计与裁剪，对大量小文件更高效；Delta Lake 用 Transaction Log 顺序记录，对少量大文件更轻量；Iceberg 的隐藏分区与分区进化更灵活，Delta Lake 的流式写入与 Databricks 生态集成更深。",
+  "level": "待学习",
+  "reviewCount": 0,
+  "lastReview": "",
+  "nextReview": "2026-09-15"
  }
 ]
