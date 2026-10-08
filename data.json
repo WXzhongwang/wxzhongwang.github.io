@@ -1789,5 +1789,36 @@
   "reviewCount": 0,
   "lastReview": "",
   "nextReview": "2026-10-07"
+ },
+ {
+  "id": "flink-table-api-datastream",
+  "name": "Flink Table API 与 DataStream 编程实战",
+  "stack": "Flink",
+  "types": [
+   "原理",
+   "使用方法",
+   "核心代码",
+   "面试题"
+  ],
+  "content": "## 核心原理\n\nFlink 提供两套核心编程接口：\n- **DataStream API**：面向流处理的底层 API，直接操作 `DataStream<T>`，支持事件时间、状态、Checkpoint 等细粒度控制。\n- **Table API / SQL**：面向关系型表达的声明式 API，底层通过 `Planner`（Blink Planner 或 Old Planner）转换为 DataStream 或 Batch 执行计划。\n\n两者可无缝互转：\n- `StreamTableEnvironment.toDataStream(Table)`：Table → DataStream\n- `StreamTableEnvironment.fromDataStream(DataStream)`：DataStream → Table\n\nBlink Planner 是 Flink 1.11+ 的默认 Planner，基于 Apache Calcite 做 SQL 解析与优化，支持流批统一。\n\n## 使用方法与核心代码\n\n### 1. DataStream 基础 WordCount\n```java\nStreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();\nenv.setParallelism(2);\n\nDataStream<String> source = env.socketTextStream(\"localhost\", 9999);\n\nDataStream<Tuple2<String, Integer>> wordCounts = source\n    .flatMap(new Tokenizer())\n    .keyBy(value -> value.f0)\n    .sum(1);\n\nwordCounts.print();\nenv.execute(\"DataStream WordCount\");\n```\n\n### 2. Table API 基础查询\n```java\nStreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();\nStreamTableEnvironment tEnv = StreamTableEnvironment.create(env);\n\n// 注册表\ntEnv.executeSql(\"CREATE TABLE user_behavior (\" +\n    \"  user_id STRING,\" +\n    \"  item_id STRING,\" +\n    \"  behavior STRING,\" +\n    \"  ts TIMESTAMP(3),\" +\n    \"  WATERMARK FOR ts AS ts - INTERVAL '5' SECOND\" +\n    \") WITH ('connector' = 'kafka', ...);\");\n\n// Table API 查询\nTable result = tEnv.from(\"user_behavior\")\n    .groupBy($(\"behavior\"))\n    .select($(\"behavior\"), $(\"user_id\").count().as(\"cnt\"));\n\ntEnv.toDataStream(result).print();\nenv.execute(\"Table API Demo\");\n```\n\n### 3. DataStream ↔ Table 互转\n```java\n// DataStream 转 Table（带字段重命名）\nDataStream<Event> stream = ...;\nTable table = tEnv.fromDataStream(stream, $(\"userId\"), $(\"timestamp\").rowtime());\n\n// Table 转 DataStream（保留 Retract 流）\nDataStream<Row> retractStream = tEnv.toRetractStream(table, Row.class);\n```\n\n### 4. 窗口聚合（Table API）\n```java\nTable tumbleResult = tEnv.from(\"user_behavior\")\n    .window(Tumble.over(lit(10).minutes()).on($(\"ts\")).as(\"w\"))\n    .groupBy($(\"behavior\"), $(\"w\"))\n    .select($(\"behavior\"), $(\"w\").start(), $(\"user_id\").count());\n```\n\n## 面试高频题\n\n**Q1：Table API 与 DataStream API 如何选择？**\n> DataStream 适合需要细粒度控制（自定义状态、异步 I/O、复杂事件处理）的场景；Table API/SQL 适合快速开发、流批统一、复杂关系型查询（Join、窗口聚合）。生产环境常混合使用：用 DataStream 做 ETL，用 Table API 做统计分析。\n\n**Q2：Blink Planner 与 Old Planner 的区别？**\n> Blink Planner 支持流批统一、更完善的 SQL 语法（如 MATCH_RECOGNIZE）、更高效的执行计划生成；Old Planner 已废弃。Blink 基于 Calcite 做优化，支持子查询去关联、谓词下推等。\n\n**Q3：Table 转 DataStream 时，toDataStream 与 toRetractStream 的区别？**\n> `toDataStream` 仅适用于仅追加（Append-only）的查询（如 SELECT、简单过滤）；`toRetractStream` 适用于会产生更新的查询（如聚合、GroupBy），输出 `(Boolean, Row)` 元组，true 表示新增、false 表示撤销。\n",
+  "level": "待学习",
+  "reviewCount": 0,
+  "lastReview": "",
+  "nextReview": "2026-10-08"
+ },
+ {
+  "id": "clickhouse-primary-key-sparse-index",
+  "name": "ClickHouse 主键与稀疏索引原理",
+  "stack": "ClickHouse",
+  "types": [
+   "原理",
+   "使用方法",
+   "面试题"
+  ],
+  "content": "## 核心原理\n\nClickHouse 的 MergeTree 引擎家族采用**稀疏索引（Sparse Index）**机制，与 B+Tree 稠密索引有本质区别：\n\n### 1. 数据存储结构\n- 数据按主键排序后**分块写入**，默认每 8192 行形成一个 **Granule（颗粒）**\n- 每个 Granule 对应一个 **Mark**，记录该块在文件中的偏移位置\n- 索引文件仅存储每个 Granule 的第一行主键值，因此索引体积极小\n\n### 2. 主键（PRIMARY KEY）vs 排序键（ORDER BY）\n- `ORDER BY`：决定数据在磁盘上的物理排序顺序，**必须指定**\n- `PRIMARY KEY`：逻辑主键，默认与 ORDER BY 相同；可指定前缀作为索引键\n- 主键列必须是排序键的前缀，如 `ORDER BY (a, b, c)`，主键可以是 `(a)` 或 `(a, b)`\n\n### 3. 稀疏索引查询过程\n1. 在索引文件中二分查找目标主键值，定位到可能包含数据的 Granule\n2. 根据 Mark 的偏移量，从列文件中读取对应压缩块\n3. 解压后在内存中扫描精确匹配行\n\n### 4. 二级索引（跳数索引）\n- `minmax`：记录每 Granule 的 min/max，加速范围查询\n- `set`：记录每 Granule 的去重值集合，加速 IN 查询\n- `bloom_filter`：布隆过滤器，加速等值查询\n\n## 使用方法与核心代码\n\n### 1. 建表指定主键与排序键\n```sql\nCREATE TABLE events (\n    event_id UInt64,\n    user_id UInt64,\n    event_time DateTime,\n    event_type String\n) ENGINE = MergeTree()\nORDER BY (user_id, event_time)  -- 排序键\nPRIMARY KEY user_id             -- 主键为排序键前缀\nPARTITION BY toYYYYMM(event_time)\nSETTINGS index_granularity = 8192;\n```\n\n### 2. 查看索引命中情况\n```sql\nEXPLAIN indexes = 1\nSELECT * FROM events WHERE user_id = 10086;\n```\n\n### 3. 跳数索引加速\n```sql\nCREATE TABLE logs (\n    url String,\n    status UInt16,\n    response_time UInt32,\n    INDEX idx_status status TYPE minmax GRANULARITY 4\n) ENGINE = MergeTree()\nORDER BY url;\n```\n\n### 4. 主键设计最佳实践\n```sql\n-- 高基数字段放前面，利用前缀剪枝\nORDER BY (tenant_id, user_id, event_time)\n\n-- 避免单调递增主键导致写放大，可加入哈希前缀\nORDER BY (sipHash64(user_id) % 16, user_id, event_time)\n```\n\n## 面试高频题\n\n**Q1：ClickHouse 为什么用稀疏索引而不是 B+Tree？**\n> 稀疏索引体积小（常驻内存），适合海量数据场景；B+Tree 索引体积大，随机 IO 多。ClickHouse 面向 OLAP 分析，查询通常涉及大量数据扫描，稀疏索引 + 列存 + 向量化执行的组合更高效。代价是点查性能不如行存数据库。\n\n**Q2：主键列选择对查询性能的影响？**\n> 主键决定数据物理顺序和索引剪枝效果。高基数、常出现在 WHERE 中的列应放前面；单调递增主键（如时间戳）会导致新数据总是写入末尾，影响合并效率，可加入哈希前缀打散。\n\n**Q3：index_granularity 调大或调小的影响？**\n> 调大（如 32768）：索引更小，但每个 Granule 数据量大，可能读取更多无关数据\n> 调小（如 1024）：索引更精细，点查更快，但索引体积增大，内存占用上升\n> 默认 8192 是通用场景的平衡点。\n",
+  "level": "待学习",
+  "reviewCount": 0,
+  "lastReview": "",
+  "nextReview": "2026-10-08"
  }
 ]
